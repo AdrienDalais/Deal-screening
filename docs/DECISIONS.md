@@ -175,3 +175,65 @@ row that silently zeroed a derived line, a permanently broken check
 formula that read as decoration, and CAGR cells that were half live
 formulas and half pasted values. Each one was correct when written. The
 schema exists to stop them staying wrong.
+
+---
+
+## 2026-09-09 — 010: Obsidian is a read-only surface. The database is the system of record.
+
+**Decision.** Deal records live in SQLite. Obsidian receives a one-way
+generated export and holds the analyst's own hand-written notes. There is
+no path by which Obsidian writes back into the database.
+
+**Why not store deal records in Obsidian.** Markdown cannot enforce that
+a figure carries its units, basis, period, source page and review status.
+The moment a number lives in a note it is a bare number again — the exact
+failure this project exists to prevent. Cross-deal comparison and "show
+me every unreviewed figure" are queries, and a folder of notes cannot be
+queried.
+
+**Why use Obsidian at all.** Qualitative work — call notes, market
+reading, threads across deals and people — is genuinely better there, and
+it is where the analyst already works.
+
+**The three connection points.**
+
+1. **Generated export, database → vault.** One note per deal, with YAML
+   front-matter (deal id, stage, headline metrics, open issue count) and
+   links. Headed `GENERATED — DO NOT EDIT`, rewritten on every export.
+2. **Hand-written notes are ingestible.** A note in a `notes/` subfolder
+   can be registered as a document with `doc_type = analyst_note`, so
+   claims made in it carry the same evidence treatment as claims in a
+   CIM. The tool reads that folder and never writes to it.
+3. **Never two-way sync.** A number corrected in a generated note that
+   the database does not know about is a second truth, which breaks
+   "nothing is silently overwritten" directly.
+
+**Rejected.** Markdown files as the primary store, with the database as
+an index built from them. Appealing because everything stays readable in
+a plain text editor, but it puts the source of truth in a format that
+cannot express review status or hold two conflicting figures side by
+side without ambiguity.
+
+**Confidentiality guard.** Export is blocked for `confidential` deals
+unless the vault is on local disk only. This is enforced by inspecting
+the path at runtime, not by trusting the `OBSIDIAN_VAULT_SYNC` setting:
+
+- reject any path under `~/Library/Mobile Documents/` (iCloud Drive)
+- reject any path under `~/Library/CloudStorage/` (Dropbox, Google
+  Drive, OneDrive and similar via the macOS File Provider API)
+- **reject any path under `~/Desktop/` or `~/Documents/` when iCloud
+  Desktop & Documents sync is enabled** — this machine has it enabled,
+  so a vault moved into either folder would sync to Apple silently
+- reject a vault containing `.obsidian/sync.json` (Obsidian Sync)
+- reject a path containing `.icloud` placeholder files
+
+**Why check rather than trust the setting.** The setting records
+intent. A vault dragged into `~/Documents` starts syncing without the
+setting changing. The check must look at where the files actually are.
+
+Same shape as the LLM provider rule, and it gets the same test:
+a confidential deal plus a synced vault must raise, not warn.
+
+**Scope.** The export itself is not week-one work. The decision is
+recorded now because it constrains the deal record; the exporter is
+built after the week-one scope is complete.
