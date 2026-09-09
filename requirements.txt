@@ -1,0 +1,29 @@
+# Lower bounds only for now. Once the environment is built we will
+# freeze exact versions into requirements.lock.txt so the project is
+# reproducible.
+
+# Storage
+SQLAlchemy>=2.0
+alembic>=1.13
+
+# Validation / structured LLM output
+pydantic>=2.7
+
+# Interface
+streamlit>=1.37
+
+# Document reading
+pypdf>=4.2
+openpyxl>=3.1
+
+# Document writing
+python-docx>=1.1
+
+# Config
+python-dotenv>=1.0
+
+# LLM provider (imported only inside llm/)
+mistralai>=1.0
+
+# Testing
+pytest>=8.2

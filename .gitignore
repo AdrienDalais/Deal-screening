@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------
+# Secrets. Never commit these.
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ---------------------------------------------------------------
+# Confidential deal material. Never commit these.
+# The directories themselves are tracked (via .gitkeep) so the
+# project structure survives a fresh clone; their contents are not.
+# ---------------------------------------------------------------
+deals_private/*
+!deals_private/.gitkeep
+
+data/*
+!data/.gitkeep
+
+# Raw LLM responses may contain deal text.
+llm_runs/
+
+# ---------------------------------------------------------------
+# Databases and generated output
+# ---------------------------------------------------------------
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+exports/
+*.docx
+*.xlsx
+*.pdf
+# ...but the synthetic test fixtures ARE tracked: they are the
+# evaluation set and must be identical for everyone.
+!tests/fixtures/**/*.docx
+!tests/fixtures/**/*.xlsx
+!tests/fixtures/**/*.pdf
+
+# ---------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------
+.DS_Store
+.vscode/
+.idea/
+*.swp
