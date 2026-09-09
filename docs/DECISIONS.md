@@ -237,3 +237,42 @@ a confidential deal plus a synced vault must raise, not warn.
 **Scope.** The export itself is not week-one work. The decision is
 recorded now because it constrains the deal record; the exporter is
 built after the week-one scope is complete.
+
+---
+
+## 2026-09-09 — 011: Issues are computed; resolutions are stored
+
+**Decision.** Reconciliation issues remain computed on demand and are
+never persisted (decision 004 stands). The analyst's **resolution** of an
+issue *is* persisted, in an `issue_resolutions` table keyed by a
+deterministic fingerprint of the issue: deal, check type, metric, period
+and the sorted observation ids involved.
+
+A resolution is automatically invalidated if any observation in its
+fingerprint changes, so an explanation cannot outlive the figures it
+explained.
+
+**Why.** Two figures disagreeing is not always an error. A CIM commonly
+restates a headline figure in more than one place, and the versions can
+differ for legitimate reasons — continuing operations only, net of
+rebates, pre-acquisition. The analyst sense-checks and concludes the
+difference is proper.
+
+Without stored resolutions that finding resurfaces every time the deal is
+opened, forever. The analyst learns to ignore the issues list, and an
+ignored issues list is worse than none: it provides the appearance of a
+control while providing none of the substance.
+
+**Why not simply store the issues and mark them closed.** Because then
+the stored issue can disagree with the data it describes — the failure
+mode decision 004 exists to prevent. Storing only the judgement keeps
+findings live and derived, while making the human contribution durable.
+
+**Consequence.** Reconciliation output carries three states rather than
+two: open, resolved-with-reason, and *stale resolution* — where an
+explanation existed but the underlying figures have since changed and it
+must be revisited.
+
+**Built when.** Week-one step 5. Recorded now because it came out of
+describing how CIMs actually behave, and it changes what reconciliation
+returns.
