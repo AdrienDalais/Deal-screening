@@ -241,6 +241,11 @@ class FinancialObservation(Base):
     # an FX rate baked into a stored figure is a hidden assumption that
     # becomes impossible to find later. See docs/DECISIONS.md #006.
     value_standardised: Mapped[float | None] = mapped_column(Float)
+    # An FX rate is never applied to a stored figure. Where a comparison
+    # needs one, it is recorded here: visible, and dated, because a rate
+    # without a date is not a fact.
+    fx_rate_to_gbp: Mapped[float | None] = mapped_column(Float)
+    fx_rate_date: Mapped[date | None] = mapped_column(Date)
 
     # --- period ------------------------------------------------------
     # Real dates, not just a year. "FY23" for a June year-end covers
