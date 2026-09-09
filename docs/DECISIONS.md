@@ -110,3 +110,68 @@ between the user and what is actually happening. The goal is a system its
 author can explain end to end.
 
 **Revisit when.** Dependency resolution starts costing real time.
+
+---
+
+## 2026-09-09 — 008: Rule of 40 has a default variant, set per deal, never assumed
+
+**Decision.** The default variant is **ARR growth % + EBITDA margin %**.
+Where a deal reports signed CARR, the variant may be set to
+**CARR growth % + EBITDA margin %**. A revenue-growth variant is also
+supported. The choice is stored on the deal record, printed in the row
+label wherever the metric appears, and recorded alongside the specific
+observation IDs that fed the calculation.
+
+**Why.** ARR + EBITDA is the normal case. CARR is used on deals where
+signed but not yet live contracts are the meaningful measure of momentum
+— that is a real, deal-specific judgement, so the system must hold it as
+configuration rather than as a hardcoded formula.
+
+**The check this makes possible.** Reconciliation compares the variant
+named in the label against the inputs actually used. A row labelled
+"CARR + EBITDA" whose formula reads an ARR growth cell is a **hard
+error**, not a warning. This exact mismatch was found in a real working
+template — the same metric name computed from different inputs on two
+sheets of one workbook — which is why it is treated as an error.
+
+**Rejected.** Picking one definition and enforcing it everywhere. Cleaner
+to implement, but it would silently rewrite the analyst's judgement, and
+on a deal where CARR is the right measure it would produce a number that
+looks authoritative and is wrong.
+
+**Consequence for the comparison table.** Two deals using different
+variants may not appear in the same column under one heading. The
+comparison view either splits the column by variant or shows the variant
+name against each figure.
+
+---
+
+## 2026-09-09 — 009: Six schema additions derived from existing working templates
+
+**Decision.** Reviewing real working templates before designing the
+schema surfaced six requirements that were not obvious from first
+principles. All six are adopted:
+
+1. **Sign convention.** Costs arrive negative, so gross profit is revenue
+   *plus* COGS. Normalised to positive magnitudes on storage, with the
+   source convention recorded on the observation.
+2. **`breakdown_axis`** on expense observations (`by_nature` /
+   `by_function` / `total`). Cost lines arrive on two overlapping cuts of
+   one cost base; summing them double-counts everything.
+3. **`metric_variant`** plus the observation IDs that fed each
+   calculation — see 008.
+4. **`is_adjusted`** with an adjustment note. Templates computed EBITDA
+   margin from adjusted EBITDA while labelling it simply "EBITDA margin".
+5. **`screening_criteria`** table. The snapshot scores explicit
+   thresholds and reports *n* of *N*; that score should be recomputed
+   from reviewed data, not typed.
+6. **`assessments`** table for rated qualitative dimensions, on a single
+   normalised scale (see `docs/PAPER_SPEC.md` §A13).
+
+**Why this is worth recording.** The four defects that motivated these
+additions were found in live working files, not invented as test cases:
+a metric label inconsistent with its inputs, an FX reference off by one
+row that silently zeroed a derived line, a permanently broken check
+formula that read as decoration, and CAGR cells that were half live
+formulas and half pasted values. Each one was correct when written. The
+schema exists to stop them staying wrong.
