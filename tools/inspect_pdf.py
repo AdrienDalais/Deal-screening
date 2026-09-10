@@ -45,6 +45,7 @@ def inspect(path: Path) -> None:
     run_counts: list[int] = []
     image_counts: list[int] = []
     largest_image: tuple[int, int] = (0, 0)
+    image_sizes: Counter[tuple[int, int]] = Counter()
     pages_with_images = 0
     total_images = 0
     big_image_pages = 0          # an image covering >25% of the page
@@ -99,12 +100,9 @@ def inspect(path: Path) -> None:
                 w, h = image.image.size
             except Exception:
                 continue
+            image_sizes[(w, h)] += 1
             if w * h > largest_image[0] * largest_image[1]:
                 largest_image = (w, h)
-            if (w / 96.0 * PT_PER_INCH) * (h / 96.0 * PT_PER_INCH) > \
-                    0.25 * width * height:
-                big_image_pages += 1
-                break
 
     n = len(pages)
     print(f"pages                     {n}")
@@ -134,23 +132,45 @@ def inspect(path: Path) -> None:
         print("    which means extracted text arrives out of reading order.")
     print()
     print("IMAGES")
-    print(f"  total embedded images     {total_images}")
+    print(f"  total placements          {total_images}")
+    print(f"  distinct dimensions       {len(image_sizes)}")
+    icons = sum(c for (w, h), c in image_sizes.items() if w * h < 10_000)
+    large = {d: c for d, c in image_sizes.items() if d[0] * d[1] >= 250_000}
+    print(f"  of which tiny (<10k px)   {icons}  "
+          f"— glyphs, bullets and logos, not data")
+    print(f"  distinct LARGE images     {len(large)}  "
+          f"({sum(large.values())} placements)")
+    repeated = [(d, c) for d, c in large.items() if c > n // 4]
+    for (w, h), count in repeated:
+        print(f"    {w} x {h} px on {count} pages — a slide background, "
+              f"not content")
     print(f"  pages containing an image {pages_with_images} "
           f"({pages_with_images / n:.0%})")
-    print(f"  pages where an image covers >25% of the page: {big_image_pages}")
     if largest_image != (0, 0):
         print(f"  largest image             {largest_image[0]} x "
               f"{largest_image[1]} px")
     print()
+    total_chars = sum(char_counts)
+    print("TEXT VOLUME")
+    print(f"  total characters          {total_chars:,}  "
+          f"(roughly {total_chars // 4:,} tokens)")
+    print(f"  pages with no text at all {sum(1 for c in char_counts if c == 0)}")
+    print()
     print("READING")
-    if sparse_pages / n > 0.3 and pages_with_images / n > 0.3:
-        print("  Looks graphic-led: many pages carry little text and an image.")
-        print("  Numbers shown only inside those images are NOT in the file")
-        print("  and cannot be extracted without OCR or a vision model.")
-    elif pages_with_images / n > 0.3:
-        print("  Images are common but pages still carry text. Charts are")
-        print("  probably vector with real text labels: extractable, but")
-        print("  arriving as scattered fragments.")
+    # Judge on distinct large images, not placements: a background
+    # template repeated on every page is not data.
+    data_images = sum(1 for d, c in image_sizes.items()
+                      if d[0] * d[1] >= 250_000 and c <= n // 4)
+    if sparse_pages / n > 0.5:
+        print("  Graphic-led. Most pages carry little text, so figures shown")
+        print("  only inside images are NOT in the file and cannot be read")
+        print("  without OCR or a vision model.")
+    elif data_images > 0:
+        print("  Slide-shaped and mixed. Most pages carry real text, so")
+        print("  charts are probably vector with extractable labels — but")
+        print(f"  {sparse_pages} page(s) hold almost no text and are likely")
+        print("  section dividers or full-page graphics. Anything shown only")
+        print("  on those pages needs OCR, or must be reported as unread.")
     else:
         print("  Largely text. Extraction should recover most content,")
         print("  subject to reading order.")
