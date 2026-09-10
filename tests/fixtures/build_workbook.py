@@ -23,6 +23,7 @@ from storage import enums as E
 from tests.fixtures.truth import CompanyTruth
 
 FIRST_PERIOD_COL = 4          # column D
+PERIOD_HEADER_ROW = 8
 LABEL_COL = 2                 # column B
 BOLD = Font(bold=True)
 UNDERLINE = Border(bottom=Side(style="thin"))
@@ -33,7 +34,13 @@ def _scaled(value: float, unit: E.Unit) -> float:
     return round(value / unit.multiplier, 4)
 
 
-def build(truth: CompanyTruth, out_dir: Path) -> Path:
+def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
+    """Returns the path and a metric -> row-number map.
+
+    The row map lets the answer key cite the exact cell each figure was
+    written to. Hardcoding cell references in the key would break the
+    moment a line item was added above them.
+    """
     wb = Workbook()
     ws = wb.active
     ws.title = "Scorecard"
@@ -148,4 +155,4 @@ def build(truth: CompanyTruth, out_dir: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{truth.slug}_financials.xlsx"
     wb.save(path)
-    return path
+    return path, row_of_metric
