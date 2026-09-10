@@ -11,10 +11,11 @@ Each company has one source of truth — a `CompanyTruth` object in
 rendered from it in a single run:
 
 ```
-                    ┌──→  <slug>_cim.pdf          (full length)
-truth (one object) ─┼──→  <slug>_cim_short.pdf    (fast test loop)
+                    ┌──→  <slug>_cim_slides.pdf   PRIMARY — 84-page deck
+truth (one object) ─┼──→  <slug>_cim.pdf          easy-case regression
+                    ├──→  <slug>_cim_short.pdf    fast test loop
                     ├──→  <slug>_financials.xlsx
-                    └──→  expected.json           (the answer key)
+                    └──→  expected.json           the answer key
 ```
 
 If the documents were written by hand, the "correct" answer would be
@@ -45,16 +46,50 @@ An extractor that "helpfully" corrects a figure is failing, not helping.
 Silently repairing a document is the behaviour this system exists to
 prevent.
 
-## Two document lengths
+## Three CIM variants, and why
 
-The full CIM runs to ~81 pages, matching the 80-100 of a real one. That
-length is deliberate: a fixture small enough to fit in a single model
-call would let us build a pipeline that works against a hosted model in a
-demo and fails on the local model — which is the only provider
-`confidential` deals are permitted to use.
+The **slide deck is the primary fixture**. A CIM arrives as a PowerPoint
+export, and that is a different extraction problem from a flowing
+document: text comes back as positioned fragments with no guaranteed
+reading order, and some figures live only inside images.
 
-The short variant is ~24 pages with identical figures, defects and
-decoys, for the fast test loop.
+`build_cim_slides.py` was calibrated against a real 84-page IM,
+characterised with `tools/inspect_pdf.py` — which reports structure only,
+so a confidential document can be measured without any part of it being
+disclosed:
+
+| | Real IM | Fixture |
+|---|---|---|
+| pages | 84 | 84 |
+| geometry | 960 x 540 pt | 960 x 540 pt |
+| median characters per page | 1,156 | 1,006 |
+| median text runs per page | 44 | 30 |
+| reading-order disorder | 18% | 17% |
+| pages under 200 characters | 17% | 18% |
+| pages with no text at all | 1 | 1 |
+
+Reading-order disorder is the number that matters most. Slide elements
+are emitted in a *partially* shuffled z-order — tuned by the `DISORDER`
+constant — because PowerPoint writes text boxes in creation order rather
+than reading order. A fixture drawn tidily top-to-bottom would let us
+build an extractor that quietly depends on reading order and then fails
+on every real document. A full shuffle was also wrong: it gave 48%
+disorder, making the fixture harder than reality rather than equal to it.
+
+The **portrait prose CIM** (~81 pages) is kept as a deliberately easy
+case. When extraction fails on slides, running the same prompt against
+clean prose says immediately whether the problem is the format or the
+logic. The **short variant** (~24 pages) keeps the fast test loop fast.
+
+## Content that cannot be read
+
+Two pages hold figures that text extraction cannot recover: a bar chart
+rendered as pixels, and a graphic-only divider with no text at all. They
+are listed in `pages_requiring_ocr_or_flagging`.
+
+**Reporting them as unread is correct. Reporting them as empty is not.**
+A screening tool that silently omits what it could not parse produces a
+confident answer with a hole in it, which is worse than one that refuses.
 
 ## Decoy figures
 
@@ -78,6 +113,7 @@ without other noise.
 | Re-keying scale slip | FY23 cost of sales entered as `3.5` in a sheet denominated in thousands | Yes |
 | Exec summary restatement | Exec summary says FY24 revenue £15.1m (continuing operations); financial summary says £15.4m | **No** — must stop being raised once explained |
 | Adjusted EBITDA mislabelled | CIM row prints as "EBITDA"; figure is after exceptional items | Yes |
+| ARR bridge does not tie | FY24 bridge sums correctly to 14.4 and prints 14.4; the financial summary shows ARR of 14.1 | Yes |
 
 ### Larkspur Systems — EUR, June year end
 

@@ -11,19 +11,21 @@
   },
   "documents": [
     {
-      "filename": "thornbury_cim.pdf",
+      "filename": "thornbury_cim_slides.pdf",
       "document_type": "cim",
       "printed_unit": "millions",
       "section_pages": {
-        "executive_summary": 2,
-        "investment_highlights": 5,
-        "business_overview": 9,
-        "customers": 19,
-        "market": 28,
-        "financial_summary": 37,
-        "financial_table": 37,
-        "management": 38,
-        "process": 43
+        "executive_summary": 5,
+        "investment_highlights": 6,
+        "blank_divider": 25,
+        "retention_table": 28,
+        "competitive_landscape": 34,
+        "financial_table": 42,
+        "revenue_chart": 43,
+        "arr_bridge": 44,
+        "unreadable_chart": 45,
+        "team": 50,
+        "cap_table": 56
       },
       "observations": [
         {
@@ -39,7 +41,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -55,7 +57,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -71,7 +73,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -87,7 +89,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -103,7 +105,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -119,7 +121,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -135,7 +137,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -151,7 +153,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -167,7 +169,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -183,7 +185,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -199,7 +201,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -215,7 +217,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -231,7 +233,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -247,7 +249,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -263,7 +265,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -279,7 +281,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -295,7 +297,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -311,7 +313,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -327,7 +329,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -343,7 +345,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -359,7 +361,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -375,7 +377,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -391,7 +393,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -407,7 +409,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -423,7 +425,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -439,7 +441,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -455,7 +457,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -471,7 +473,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -487,7 +489,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -503,7 +505,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -519,7 +521,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -535,7 +537,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -551,7 +553,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -567,7 +569,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -583,7 +585,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -599,7 +601,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -615,7 +617,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -631,7 +633,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -647,7 +649,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -663,7 +665,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -679,7 +681,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -695,7 +697,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -711,7 +713,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -727,7 +729,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -743,7 +745,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -759,7 +761,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -775,7 +777,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -791,7 +793,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -807,7 +809,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -823,7 +825,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -839,7 +841,7 @@
           "period_type": "fiscal_year",
           "basis": "actual",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -855,7 +857,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -871,7 +873,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         },
         {
@@ -887,7 +889,7 @@
           "period_type": "fiscal_year",
           "basis": "management_forecast",
           "is_adjusted_as_presented": false,
-          "source_page": 37,
+          "source_page": 42,
           "extraction_method": "llm_structured"
         }
       ],
@@ -899,7 +901,7 @@
           "stated_unit": "percent",
           "period_label": "FY24",
           "claim_text": "Gross revenue retention of 94% in FY24",
-          "source_page": 5
+          "source_page": 6
         },
         {
           "claim_type": "retention",
@@ -908,7 +910,7 @@
           "stated_unit": "percent",
           "period_label": "FY24",
           "claim_text": "Net revenue retention of 118% in FY24",
-          "source_page": 5
+          "source_page": 6
         },
         {
           "claim_type": "other",
@@ -917,7 +919,7 @@
           "stated_unit": "count",
           "period_label": "FY24",
           "claim_text": "214 enterprise customers as at 31 December 2024",
-          "source_page": 5
+          "source_page": 6
         },
         {
           "claim_type": "customer_concentration",
@@ -926,7 +928,7 @@
           "stated_unit": "percent",
           "period_label": "FY24",
           "claim_text": "The top ten customers represent 31% of ARR",
-          "source_page": 5
+          "source_page": 6
         },
         {
           "claim_type": "other",
@@ -935,7 +937,7 @@
           "stated_unit": "units",
           "period_label": "FY24",
           "claim_text": "Average contract value of \u00a366k",
-          "source_page": 5
+          "source_page": 6
         },
         {
           "claim_type": "other",
@@ -944,7 +946,7 @@
           "stated_unit": "count",
           "period_label": "FY24",
           "claim_text": "126 full-time employees across two offices",
-          "source_page": 5
+          "source_page": 6
         }
       ]
     },
@@ -2253,6 +2255,137 @@
       "claims": []
     }
   ],
+  "structured_sections": {
+    "cap_table": [
+      {
+        "name": "A. Whitfield (CEO, co-founder)",
+        "holding_pct": 24.5,
+        "category": "founder"
+      },
+      {
+        "name": "R. Nakamura (CTO, co-founder)",
+        "holding_pct": 21.0,
+        "category": "founder"
+      },
+      {
+        "name": "Peregrine Ventures LP",
+        "holding_pct": 19.5,
+        "category": "institutional"
+      },
+      {
+        "name": "Halstead Growth Partners II",
+        "holding_pct": 16.0,
+        "category": "institutional"
+      },
+      {
+        "name": "Early angel investors (x4)",
+        "holding_pct": 8.5,
+        "category": "other"
+      },
+      {
+        "name": "EMI option pool",
+        "holding_pct": 7.0,
+        "category": "employee"
+      },
+      {
+        "name": "Employee growth shares",
+        "holding_pct": 3.5,
+        "category": "employee"
+      }
+    ],
+    "cap_table_total_pct": 100.0,
+    "arr_bridge": [
+      {
+        "period_label": "FY23",
+        "opening": 7000000.0,
+        "new_business": 2400000.0,
+        "expansion": 1500000.0,
+        "churn": 700000.0,
+        "closing_as_printed": 10200000.0,
+        "closing_implied_by_components": 10200000.0,
+        "arr_in_financial_summary": 10200000
+      },
+      {
+        "period_label": "FY24",
+        "opening": 10200000.0,
+        "new_business": 3100000.0,
+        "expansion": 2200000.0,
+        "churn": 1100000.0,
+        "closing_as_printed": 14400000.0,
+        "closing_implied_by_components": 14400000.0,
+        "arr_in_financial_summary": 14100000
+      }
+    ],
+    "retention": [
+      {
+        "period_label": "FY22",
+        "gross_retention_pct": 91.0,
+        "net_retention_pct": 109.0,
+        "logo_retention_pct": 88.0
+      },
+      {
+        "period_label": "FY23",
+        "gross_retention_pct": 93.0,
+        "net_retention_pct": 114.0,
+        "logo_retention_pct": 90.0
+      },
+      {
+        "period_label": "FY24",
+        "gross_retention_pct": 94.0,
+        "net_retention_pct": 118.0,
+        "logo_retention_pct": 92.0
+      }
+    ],
+    "team": [
+      {
+        "name": "A. Whitfield",
+        "role": "Chief Executive Officer",
+        "joined": "2016"
+      },
+      {
+        "name": "R. Nakamura",
+        "role": "Chief Technology Officer",
+        "joined": "2016"
+      },
+      {
+        "name": "S. Oyelaran",
+        "role": "Chief Financial Officer",
+        "joined": "2022"
+      },
+      {
+        "name": "M. Brennan",
+        "role": "VP Sales",
+        "joined": "2021"
+      },
+      {
+        "name": "K. Lindqvist",
+        "role": "VP Customer Success",
+        "joined": "2019"
+      }
+    ],
+    "competitors": [
+      {
+        "name": "Established policy administration vendors",
+        "positioning": "Incumbent, extending into analytics"
+      },
+      {
+        "name": "Vantell Risk Systems",
+        "positioning": "Direct specialist"
+      },
+      {
+        "name": "Corveth Analytics",
+        "positioning": "Direct specialist"
+      },
+      {
+        "name": "In-house spreadsheets",
+        "positioning": "Status quo"
+      }
+    ]
+  },
+  "pages_requiring_ocr_or_flagging": [
+    25,
+    45
+  ],
   "expected_reconciliation_findings": [
     {
       "key": "thornbury_rekeying_scale_slip",
@@ -2271,6 +2404,14 @@
       "is_genuine_error": false
     },
     {
+      "key": "thornbury_arr_bridge_does_not_tie",
+      "kind": "bridge_does_not_tie",
+      "where": "CIM, ARR bridge slide, FY24",
+      "description": "The FY24 ARR bridge sums to and prints a closing ARR of 14.4, while the financial summary shows ARR of 14.1 for the same year. The bridge is internally consistent; it disagrees with the accounts.",
+      "expected_detection": "Closing ARR on the bridge does not equal the ARR line for the same period in the financial summary. A difference of 0.3 that appears in no other year.",
+      "is_genuine_error": true
+    },
+    {
       "key": "thornbury_adjusted_ebitda_mislabelled",
       "kind": "label_inconsistent_with_inputs",
       "where": "CIM, financial summary, EBITDA row",
@@ -2281,6 +2422,7 @@
   ],
   "notes": [
     "Extraction is scored against what each document literally says, defects included. Correcting a figure during extraction is a failure, not a help.",
-    "Reconciliation is scored against expected_reconciliation_findings. One finding is not a genuine error and must stop being raised once explained (see docs/DECISIONS.md #011)."
+    "Reconciliation is scored against expected_reconciliation_findings. One finding is not a genuine error and must stop being raised once explained (see docs/DECISIONS.md #011).",
+    "Pages listed in pages_requiring_ocr_or_flagging hold figures that text extraction cannot recover. Reporting them as unread is correct; reporting them as empty is not."
   ]
 }

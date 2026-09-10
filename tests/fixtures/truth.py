@@ -95,6 +95,60 @@ class Kpi:
     period_label: str | None = None
 
 
+
+@dataclass(frozen=True)
+class BridgeRow:
+    """One year of an ARR bridge.
+
+    Opening + new + expansion - churn = closing. A self-contained
+    arithmetic identity, which makes it one of the few things in a CIM
+    that can be checked without reference to anything else — and it must
+    *also* tie to the ARR line in the financial summary. A bridge built
+    before a late adjustment to the accounts will do neither.
+    """
+
+    period_label: str
+    opening: float
+    new_business: float
+    expansion: float
+    churn: float          # positive magnitude; subtracted
+    closing: float        # as printed, which may not equal the components
+
+    @property
+    def implied_closing(self) -> float:
+        return self.opening + self.new_business + self.expansion - self.churn
+
+
+@dataclass(frozen=True)
+class Shareholder:
+    name: str
+    holding_pct: float
+    category: str          # founder / institutional / employee / other
+
+
+@dataclass(frozen=True)
+class TeamMember:
+    name: str
+    role: str
+    joined: str
+    background: str
+
+
+@dataclass(frozen=True)
+class Competitor:
+    name: str
+    positioning: str
+    note: str
+
+
+@dataclass(frozen=True)
+class RetentionRow:
+    period_label: str
+    gross_retention_pct: float
+    net_retention_pct: float
+    logo_retention_pct: float
+
+
 @dataclass(frozen=True)
 class CompanyTruth:
     name: str
@@ -115,6 +169,11 @@ class CompanyTruth:
     periods: list[Period]
     line_items: list[LineItem]
     kpis: list[Kpi] = field(default_factory=list)
+    bridge: list[BridgeRow] = field(default_factory=list)
+    retention: list[RetentionRow] = field(default_factory=list)
+    cap_table: list[Shareholder] = field(default_factory=list)
+    team: list[TeamMember] = field(default_factory=list)
+    competitors: list[Competitor] = field(default_factory=list)
     narrative: dict[str, str] = field(default_factory=dict)
     filler_sections: list[tuple[str, str]] = field(default_factory=list)
     defects: list[Defect] = field(default_factory=list)
@@ -196,5 +255,28 @@ class CompanyTruth:
                         f"{p.label}: adj. EBITDA — expected {ebitda:,.0f}, "
                         f"gross profit less opex plus adjustments gives {expected:,.0f}"
                     )
+
+        if self.cap_table:
+            total = sum(s.holding_pct for s in self.cap_table)
+            if abs(total - 100.0) > 0.05:
+                problems.append(
+                    f"cap table holdings total {total:.2f}%, not 100%")
+
+        # The bridge is checked only where the truth intends it to tie.
+        # A deliberately broken bridge is declared as a defect instead.
+        broken = {d.where for d in self.defects if d.kind == "bridge_does_not_tie"}
+        for row in self.bridge:
+            if any(row.period_label in w for w in broken):
+                continue
+            if abs(row.implied_closing - row.closing) > 1.0:
+                problems.append(
+                    f"{row.period_label}: ARR bridge components give "
+                    f"{row.implied_closing:,.0f}, closing shown as "
+                    f"{row.closing:,.0f}")
+            arr = value("arr", row.period_label)
+            if arr is not None and abs(arr - row.closing) > 1.0:
+                problems.append(
+                    f"{row.period_label}: bridge closing ARR {row.closing:,.0f} "
+                    f"does not match the ARR line {arr:,.0f}")
 
         return problems

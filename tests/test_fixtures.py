@@ -36,6 +36,14 @@ def key() -> dict:
 
 @pytest.fixture(scope="module")
 def cim_pages() -> list[str]:
+    """The slide deck: the primary CIM, matching the shape of a real one."""
+    return [p.extract_text() or ""
+            for p in PdfReader(str(THORNBURY_DIR / "thornbury_cim_slides.pdf")).pages]
+
+
+@pytest.fixture(scope="module")
+def prose_pages() -> list[str]:
+    """The portrait prose CIM: the deliberately easy regression fixture."""
     return [p.extract_text() or ""
             for p in PdfReader(str(THORNBURY_DIR / "thornbury_cim.pdf")).pages]
 
@@ -126,18 +134,108 @@ def test_every_cim_figure_appears_on_the_page_the_key_cites(key, cim_pages):
     assert not missing, "\n".join(missing)
 
 
+def test_the_cim_is_a_landscape_slide_deck():
+    """A CIM exported from PowerPoint is a different extraction problem
+    from a flowing document: text arrives as positioned fragments with no
+    guaranteed reading order. Measured on a real IM at 960x540."""
+    page = PdfReader(str(THORNBURY_DIR / "thornbury_cim_slides.pdf")).pages[0]
+    width, height = float(page.mediabox.width), float(page.mediabox.height)
+    assert (round(width), round(height)) == (960, 540)
+    assert width / height > 1.55
+
+
+def test_the_cim_text_arrives_out_of_reading_order(cim_pages):
+    """A real deck shows ~18% of text runs moving UP the page. A fixture
+    drawn tidily downwards would let us build an extractor that quietly
+    depends on reading order and fails on every real document."""
+    import statistics
+
+    reader = PdfReader(str(THORNBURY_DIR / "thornbury_cim_slides.pdf"))
+    shares = []
+    for page in reader.pages:
+        ys: list[float] = []
+
+        def visitor(text, cm, tm, font_dict, font_size, _ys=ys):
+            if text and text.strip():
+                _ys.append(tm[4] * cm[1] + tm[5] * cm[3] + cm[5])
+
+        page.extract_text(visitor_text=visitor)
+        if len(ys) > 3:
+            back = sum(1 for a, b in zip(ys, ys[1:]) if b > a + 2)
+            shares.append(back / (len(ys) - 1))
+    assert 0.10 <= statistics.median(shares) <= 0.28
+
+
+def test_some_pages_carry_almost_no_text(cim_pages):
+    """17% of the real deck is dividers and full-page graphics."""
+    sparse = [i + 1 for i, p in enumerate(cim_pages) if len(p.strip()) < 200]
+    assert 0.10 <= len(sparse) / len(cim_pages) <= 0.28
+    assert any(len(cim_pages[i - 1].strip()) == 0 for i in sparse)
+
+
+def test_unreadable_pages_are_declared_in_the_key(key, cim_pages):
+    """Figures that exist only as pixels must be reported as unread.
+    Treating them as empty produces a confident answer with a hole in it."""
+    declared = key["pages_requiring_ocr_or_flagging"]
+    assert declared, "no unreadable pages declared"
+    for number in declared:
+        assert len(cim_pages[number - 1].strip()) < 200
+
+
+def test_the_arr_bridge_ties_to_itself_but_not_to_the_accounts(key):
+    """The FY24 bridge is internally consistent and disagrees with the
+    ARR line — a bridge built before a late adjustment to the accounts."""
+    rows = key["structured_sections"]["arr_bridge"]
+    assert rows
+    for row in rows:
+        assert row["closing_implied_by_components"] == pytest.approx(
+            row["closing_as_printed"], abs=1.0)
+
+    mismatched = [r["period_label"] for r in rows
+                  if abs(r["closing_as_printed"]
+                         - r["arr_in_financial_summary"]) > 1.0]
+    assert mismatched == ["FY24"]
+
+
+def test_the_cap_table_totals_one_hundred_percent(key):
+    assert key["structured_sections"]["cap_table_total_pct"] == pytest.approx(100.0)
+
+
+def test_the_deck_carries_the_sections_a_real_cim_has(key):
+    sections = key["structured_sections"]
+    assert len(sections["team"]) >= 4
+    assert len(sections["competitors"]) >= 3
+    assert len(sections["retention"]) >= 3
+
+
+def test_the_prose_fixture_still_builds_as_an_easy_case(prose_pages):
+    """Kept for diagnosis: when extraction fails on slides, the same
+    prompt against clean prose says whether the problem is the format or
+    the logic."""
+    assert len(prose_pages) >= 75
+    assert any("Financial Summary" in p for p in prose_pages)
+
+
 def test_the_cim_is_long_enough_to_require_chunking(cim_pages):
     """A fixture small enough to fit in one model call would let us build
     a pipeline that works against a hosted model and fails on the local
     one — which is the only provider confidential deals may use."""
-    assert len(cim_pages) >= 75
+    assert len(cim_pages) >= 80
 
 
 def test_currency_figures_are_scattered_throughout_the_cim(cim_pages):
     """Retrieval must discriminate, not just find the only page that
-    mentions money."""
-    with_money = sum(1 for p in cim_pages if "£" in p)
-    assert with_money > 0.8 * len(cim_pages)
+    mentions money.
+
+    Measured across pages that carry text at all: a deck's dividers and
+    graphic-only slides cannot contain a currency figure, so counting
+    them in the denominator would set a threshold no real deck could
+    meet.
+    """
+    content = [p for p in cim_pages if len(p.strip()) >= 200]
+    with_money = sum(1 for p in content if "£" in p)
+    assert with_money > 0.75 * len(content), (
+        f"{with_money} of {len(content)} content pages mention money")
 
 
 # ---------------------------------------------------------------------
@@ -218,13 +316,15 @@ def test_every_planted_defect_is_declared_in_the_key(key):
 def test_rebuilding_produces_an_identical_answer_key(key, tmp_path):
     """The fixtures must be regenerable. If a rebuild moved a page number
     or a cell reference, every stored source reference would rot."""
-    from tests.fixtures import build_answer_key, build_cim, build_workbook
+    from tests.fixtures import build_answer_key, build_cim_slides, build_workbook
 
     workbook_path, rows = build_workbook.build(THORNBURY, tmp_path)
-    cim_path, pages, _ = build_cim.build_to_page_count(THORNBURY, tmp_path, 85)
+    _, marks, _ = build_cim_slides.build_to_page_count(THORNBURY, tmp_path, 84)
     key_path = build_answer_key.build(
-        THORNBURY, tmp_path, pages, rows,
-        cim_filename="thornbury_cim.pdf",
-        workbook_filename="thornbury_financials.xlsx")
+        THORNBURY, tmp_path, marks, rows,
+        cim_filename="thornbury_cim_slides.pdf",
+        workbook_filename="thornbury_financials.xlsx",
+        unreadable_pages=sorted({marks["unreadable_chart"],
+                                 marks["blank_divider"]}))
 
     assert json.loads(key_path.read_text()) == key

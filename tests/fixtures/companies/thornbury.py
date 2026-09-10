@@ -22,7 +22,10 @@ from __future__ import annotations
 from datetime import date
 
 from storage import enums as E
-from tests.fixtures.truth import CompanyTruth, Defect, Kpi, LineItem, Period
+from tests.fixtures.truth import (
+    BridgeRow, CompanyTruth, Competitor, Defect, Kpi, LineItem, Period,
+    RetentionRow, Shareholder, TeamMember,
+)
 
 M = 1_000_000.0  # values below are written in millions for readability
 
@@ -101,6 +104,77 @@ def _kpis() -> list[Kpi]:
             "Average contract value of £66k", 66_000.0, E.Unit.UNITS, "FY24"),
         Kpi("employees", "Employees",
             "126 full-time employees across two offices", 126, E.Unit.COUNT, "FY24"),
+    ]
+
+
+
+def _bridge() -> list[BridgeRow]:
+    """ARR bridges. FY23 ties; FY24 does not.
+
+    FY24 closing is printed as 14.4 while the financial summary shows
+    ARR of 14.1 — a bridge built before a late adjustment to the
+    accounts, which is how this happens in practice.
+    """
+    return [
+        BridgeRow("FY23", opening=7.0 * M, new_business=2.4 * M,
+                  expansion=1.5 * M, churn=0.7 * M, closing=10.2 * M),
+        BridgeRow("FY24", opening=10.2 * M, new_business=3.1 * M,
+                  expansion=2.2 * M, churn=1.1 * M, closing=14.4 * M),
+    ]
+
+
+def _retention() -> list[RetentionRow]:
+    return [
+        RetentionRow("FY22", 91.0, 109.0, 88.0),
+        RetentionRow("FY23", 93.0, 114.0, 90.0),
+        RetentionRow("FY24", 94.0, 118.0, 92.0),
+    ]
+
+
+def _cap_table() -> list[Shareholder]:
+    """Holdings total 100%. PAPER_SPEC B6 requires that check to have
+    something to run against."""
+    return [
+        Shareholder("A. Whitfield (CEO, co-founder)", 24.5, "founder"),
+        Shareholder("R. Nakamura (CTO, co-founder)", 21.0, "founder"),
+        Shareholder("Peregrine Ventures LP", 19.5, "institutional"),
+        Shareholder("Halstead Growth Partners II", 16.0, "institutional"),
+        Shareholder("Early angel investors (x4)", 8.5, "other"),
+        Shareholder("EMI option pool", 7.0, "employee"),
+        Shareholder("Employee growth shares", 3.5, "employee"),
+    ]
+
+
+def _team() -> list[TeamMember]:
+    return [
+        TeamMember("A. Whitfield", "Chief Executive Officer", "2016",
+                   "Co-founder. Previously underwriting systems lead at a "
+                   "composite insurer."),
+        TeamMember("R. Nakamura", "Chief Technology Officer", "2016",
+                   "Co-founder. Background in actuarial modelling and "
+                   "distributed systems."),
+        TeamMember("S. Oyelaran", "Chief Financial Officer", "2022",
+                   "Joined from a listed insurance services group where she "
+                   "was group financial controller."),
+        TeamMember("M. Brennan", "VP Sales", "2021",
+                   "Previously enterprise sales at two broking technology "
+                   "vendors."),
+        TeamMember("K. Lindqvist", "VP Customer Success", "2019",
+                   "Joined from consulting; leads onboarding and renewals."),
+    ]
+
+
+def _competitors() -> list[Competitor]:
+    return [
+        Competitor("Established policy administration vendors",
+                   "Incumbent, extending into analytics",
+                   "Broad footprint, slower release cycles, analytics bolted on."),
+        Competitor("Vantell Risk Systems", "Direct specialist",
+                   "Similar positioning; stronger in the Nordics."),
+        Competitor("Corveth Analytics", "Direct specialist",
+                   "Enterprise-only; longer deployments."),
+        Competitor("In-house spreadsheets", "Status quo",
+                   "Still the most common alternative; free but ungoverned."),
     ]
 
 
@@ -226,6 +300,22 @@ def _defects() -> list[Defect]:
             is_genuine_error=False,
         ),
         Defect(
+            key="thornbury_arr_bridge_does_not_tie",
+            kind="bridge_does_not_tie",
+            where="CIM, ARR bridge slide, FY24",
+            description=(
+                "The FY24 ARR bridge sums to and prints a closing ARR of "
+                "14.4, while the financial summary shows ARR of 14.1 for "
+                "the same year. The bridge is internally consistent; it "
+                "disagrees with the accounts."
+            ),
+            expected_detection=(
+                "Closing ARR on the bridge does not equal the ARR line for "
+                "the same period in the financial summary. A difference of "
+                "0.3 that appears in no other year."
+            ),
+        ),
+        Defect(
             key="thornbury_adjusted_ebitda_mislabelled",
             kind="label_inconsistent_with_inputs",
             where="CIM, financial summary, EBITDA row",
@@ -256,6 +346,11 @@ THORNBURY = CompanyTruth(
     periods=_periods(),
     line_items=_line_items(),
     kpis=_kpis(),
+    bridge=_bridge(),
+    retention=_retention(),
+    cap_table=_cap_table(),
+    team=_team(),
+    competitors=_competitors(),
     narrative=_narrative(),
     filler_sections=_filler_sections(),
     defects=_defects(),
