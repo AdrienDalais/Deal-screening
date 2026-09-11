@@ -206,6 +206,9 @@ def build_management_accounts(truth: CompanyTruth,
         ("Company", truth.name),
         ("Currency", truth.currency),
         ("Units", truth.workbook_unit.value),
+        ("Year end (EoP)", ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov",
+                            "Dec"][truth.fiscal_year_end_month]),
         ("Basis", "Continuing operations"),
     ]
     for offset, (label, value) in enumerate(header):

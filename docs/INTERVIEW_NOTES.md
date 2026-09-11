@@ -226,3 +226,39 @@ is a plan; there is no context in which reporting it as growth is
 correct, so the function should not be able to produce it.
 
 ---
+
+## Step 4a — Excel extraction, the deterministic control (2026-09-11)
+
+**What we built.** `ingestion/labels.py` maps printed labels onto
+metrics; `ingestion/excel.py` reads a workbook directly with openpyxl,
+preserving every cell reference. No model involved.
+
+**Design decision.** Spreadsheets are not sent to an LLM. A fixed-layout
+sheet is a solved problem, and a model would add cost, latency and a
+failure mode in exchange for nothing. More usefully, this becomes the
+control: when LLM extraction from a PDF scores 94%, the question is
+whether the missing 6% is the model or the pipeline, and a deterministic
+path scoring 100% on the same fixtures answers it.
+
+**The rule the extractor follows.** It transcribes; it never corrects.
+Thornbury's mis-keyed cost of sales comes back as -3.5, not -3,500.
+An extractor that repairs figures destroys the evidence that the
+document was wrong, which on a real deal is often the most valuable
+thing found.
+
+**What it does when a document contradicts itself.** Larkspur's FY25
+column is labelled as a forecast and sits under a merged header reading
+"Historicals". The extractor records both signals, flags the row, and
+declines to choose. Which is right is a judgement, and judgements belong
+to the analyst.
+
+**Interviewer question.** *"Your extractor found a cell that is obviously
+wrong by a factor of 1,000. Why not fix it?"*
+Because the two jobs have different correct answers. Extraction is scored
+on faithful transcription, reconciliation on catching errors, and they
+carry separate accuracy numbers. If extraction silently repaired the
+cell, reconciliation would find nothing, the scorecard would look clean,
+and nobody would ever learn that the model handed over by the seller had
+a broken formula in it.
+
+---
