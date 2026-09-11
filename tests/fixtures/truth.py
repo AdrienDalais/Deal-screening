@@ -174,6 +174,11 @@ class CompanyTruth:
     cap_table: list[Shareholder] = field(default_factory=list)
     team: list[TeamMember] = field(default_factory=list)
     competitors: list[Competitor] = field(default_factory=list)
+    # A second set of figures for the same periods, as restated in a
+    # later document. metric -> period label -> whole units. Where
+    # this disagrees with line_items, the disagreement is the point.
+    management_accounts: dict[str, dict[str, float]] = field(
+        default_factory=dict)
     narrative: dict[str, str] = field(default_factory=dict)
     filler_sections: list[tuple[str, str]] = field(default_factory=list)
     defects: list[Defect] = field(default_factory=list)
@@ -220,8 +225,7 @@ class CompanyTruth:
                  ["recurring_revenue", "non_recurring_revenue"]),
                 ("gross profit = revenue - cogs", "gross_profit",
                  ["revenue", "-cogs"]),
-                ("total opex = personnel + s&m + g&a", "total_opex",
-                 ["personnel_expenses", "sales_and_marketing", "general_and_admin"]),
+
             ]
             for name, total_metric, parts in checks:
                 total = value(total_metric, p.label)
@@ -243,6 +247,36 @@ class CompanyTruth:
                         f"{p.label}: {name} — expected {total:,.0f}, "
                         f"components give {summed:,.0f}"
                     )
+
+            # Operating expenses arrive on overlapping cuts of one cost
+            # base — by nature and by function. Each axis must sum to
+            # total opex on its own; summing across axes would double
+            # count the entire cost base. Driven by breakdown_axis rather
+            # than by hardcoded metric names, so a company reporting two
+            # axes is checked twice and a company reporting one is
+            # checked once.
+            total_opex = value("total_opex", p.label)
+            if total_opex is not None:
+                for axis in (E.BreakdownAxis.BY_NATURE,
+                             E.BreakdownAxis.BY_FUNCTION):
+                    parts = [i for i in self.line_items
+                             if i.breakdown_axis == axis]
+                    if not parts:
+                        continue
+                    summed = 0.0
+                    for part in parts:
+                        v = part.values.get(p.label)
+                        if v is None:
+                            summed = None
+                            break
+                        summed += v
+                    if summed is None:
+                        continue
+                    if abs(summed - total_opex) > 1.0:
+                        problems.append(
+                            f"{p.label}: total opex {total_opex:,.0f} does not "
+                            f"equal the {axis.value} breakdown "
+                            f"({summed:,.0f})")
 
             gp = value("gross_profit", p.label)
             opex = value("total_opex", p.label)

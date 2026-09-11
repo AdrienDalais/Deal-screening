@@ -86,6 +86,17 @@ def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
         cell.font = BOLD
         cell.alignment = Alignment(horizontal="center")
 
+    # ---- DEFECT: forecast_presented_as_actual -----------------------
+    # The merged "Historicals" header covers one column more than it
+    # should, placing the first forecast period inside the historical
+    # block. The column's own label still carries the forecast suffix, so
+    # two signals within one sheet disagree — which is how this survives
+    # review in practice.
+    if any(d.kind == "forecast_presented_as_actual" for d in truth.defects) \
+            and forecast_cols:
+        actual_cols = actual_cols + [forecast_cols[0]]
+        forecast_cols = forecast_cols[1:]
+
     _span(actual_cols, "Historicals")
     _span(forecast_cols, "Management forecast")
 
@@ -148,11 +159,89 @@ def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
                     value=f"={total_ref}-({part_refs})")
         row += 1
 
+    # ---- DEFECT: check_cannot_be_evaluated --------------------------
+    # A control that references a name which does not exist. It reports
+    # an error permanently while being displayed as though it worked,
+    # which is how a broken check comes to be read as decoration.
+    if any(d.kind == "check_cannot_be_evaluated" for d in truth.defects):
+        ws.cell(row=row, column=LABEL_COL,
+                value="EBITDA less P&L EBITDA (expect 0)")
+        for index in range(len(truth.periods)):
+            ws.cell(row=row, column=FIRST_PERIOD_COL + index,
+                    value="=Adj_EBITDA_PL-"
+                          f"{get_column_letter(FIRST_PERIOD_COL + index)}"
+                          f"{row_of_metric.get('adjusted_ebitda', 1)}")
+        row += 1
+
     ws.column_dimensions["B"].width = 34
     for index in range(len(truth.periods)):
         ws.column_dimensions[get_column_letter(FIRST_PERIOD_COL + index)].width = 13
 
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{truth.slug}_financials.xlsx"
+    wb.save(path)
+    return path, row_of_metric
+
+
+MANAGEMENT_ACCOUNT_ROWS = ["revenue", "recurring_revenue",
+                           "non_recurring_revenue", "cogs", "gross_profit",
+                           "total_opex", "adjusted_ebitda"]
+
+
+def build_management_accounts(truth: CompanyTruth,
+                              out_dir: Path) -> tuple[Path, dict[str, int]]:
+    """A shorter, later document restating some of the same periods.
+
+    Real deals produce these constantly: the CIM goes out, then accounts
+    are issued that treat a divested line differently. Neither document
+    is wrong. The system must hold both and let the analyst record which
+    basis the paper is written on — which is why financial_observations
+    has no uniqueness constraint on (deal, metric, period).
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Management Accounts"
+
+    header = [
+        ("Company", truth.name),
+        ("Currency", truth.currency),
+        ("Units", truth.workbook_unit.value),
+        ("Basis", "Continuing operations"),
+    ]
+    for offset, (label, value) in enumerate(header):
+        ws.cell(row=2 + offset, column=LABEL_COL, value=label).font = BOLD
+        ws.cell(row=2 + offset, column=LABEL_COL + 1, value=value)
+
+    actuals = [p for p in truth.periods if p.basis == E.Basis.ACTUAL]
+    for index, period in enumerate(actuals):
+        cell = ws.cell(row=PERIOD_HEADER_ROW, column=FIRST_PERIOD_COL + index,
+                       value=f"{period.label}A")
+        cell.font = BOLD
+        cell.alignment = Alignment(horizontal="right")
+        cell.border = UNDERLINE
+
+    row = PERIOD_HEADER_ROW + 2
+    row_of_metric: dict[str, int] = {}
+    for metric in MANAGEMENT_ACCOUNT_ROWS:
+        try:
+            item = truth.item(metric)
+        except KeyError:
+            continue
+        ws.cell(row=row, column=LABEL_COL, value=item.workbook_label)
+        for index, period in enumerate(actuals):
+            # A restated figure takes precedence over the CIM's.
+            raw = truth.management_accounts.get(metric, {}).get(
+                period.label, item.values.get(period.label))
+            if raw is None:
+                continue
+            value = _scaled(raw, truth.workbook_unit)
+            ws.cell(row=row, column=FIRST_PERIOD_COL + index,
+                    value=-value if item.is_cost else value)
+        row_of_metric[metric] = row
+        row += 1
+
+    ws.column_dimensions["B"].width = 34
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{truth.slug}_management_accounts.xlsx"
     wb.save(path)
     return path, row_of_metric

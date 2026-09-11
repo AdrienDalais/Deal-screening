@@ -117,12 +117,32 @@ without other noise.
 
 ### Larkspur Systems — EUR, June year end
 
-*Not yet built.* Forecasts inside the historical table (the merged
-header spans one column too far); Rule of 40 labelled "(CARR + EBITDA)"
-but computed from ARR growth, with no CARR line present.
+Irish logistics SaaS. **FY24 runs 1 July 2023 to 30 June 2024** — anything
+assuming FY24 means calendar 2024 breaks here.
+
+| Defect | What it is | Genuine error? |
+|---|---|---|
+| Forecast inside the historical block | The merged "Historicals" header spans four columns rather than three, so FY25 sits under it while its own label reads FY25E | Yes |
+| Rule of 40 label mismatch | Stated as "CARR growth plus EBITDA margin"; the company reports no CARR anywhere | Yes |
+
+The first is deliberately subtle: two signals *within one sheet*
+disagree, which is how it survives review in practice. Any growth rate
+or margin spanning FY24 and FY25 crosses a change of basis and must be
+refused or flagged, never reported.
 
 ### Calderwood Health — USD, March year end
 
-*Not yet built.* CIM and management accounts disagree on the same year's
-revenue; overlapping opex breakdowns by nature and by function; a check
-formula that errors permanently.
+US healthcare revenue-cycle software. Ships a **third document**: management
+accounts issued after the CIM.
+
+| Defect | What it is | Genuine error? |
+|---|---|---|
+| Documents disagree on revenue | CIM shows FY24 revenue 31.8; management accounts show 30.9, restated to exclude a divested clinic line | Neither document is wrong |
+| Overlapping opex breakdowns | Operating costs presented both by nature and by function for the same cost base; each axis sums to total opex on its own | Yes, if summed across axes |
+| Inert check formula | A control referencing a named range that does not exist, displayed as though it worked | Yes |
+
+The first is the reason `financial_observations` carries no uniqueness
+constraint on (deal, metric, period): **both figures stay live, and
+neither is silently preferred.** The second is why `breakdown_axis`
+exists — summing every expense row gives exactly twice total operating
+expenses.

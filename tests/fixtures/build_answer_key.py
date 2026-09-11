@@ -48,7 +48,9 @@ def _round(value: float) -> float:
 def build(truth: CompanyTruth, out_dir: Path, cim_pages: dict[str, int],
           workbook_rows: dict[str, int], cim_filename: str,
           workbook_filename: str,
-          unreadable_pages: list[int] | None = None) -> Path:
+          unreadable_pages: list[int] | None = None,
+          accounts_rows: dict[str, int] | None = None,
+          accounts_filename: str | None = None) -> Path:
     table_page = cim_pages["financial_table"]
 
     # --- what the CIM says --------------------------------------------
@@ -136,6 +138,46 @@ def build(truth: CompanyTruth, out_dir: Path, cim_pages: dict[str, int],
                 "extraction_method": E.ExtractionMethod.OPENPYXL_DIRECT.value,
             })
 
+    # --- what the restating document says --------------------------
+    # A later document covering some of the same periods on a different
+    # basis. Where it disagrees with the CIM, both observations stay
+    # live: that is the whole reason financial_observations carries no
+    # uniqueness constraint on (deal, metric, period).
+    accounts_observations = []
+    if accounts_rows and truth.management_accounts:
+        actuals = [p for p in truth.periods if p.basis == E.Basis.ACTUAL]
+        for metric, row in accounts_rows.items():
+            item = truth.item(metric)
+            for index, period in enumerate(actuals):
+                raw = truth.management_accounts.get(metric, {}).get(
+                    period.label, item.values.get(period.label))
+                if raw is None:
+                    continue
+                printed = raw / truth.workbook_unit.multiplier
+                if item.is_cost:
+                    printed = -printed
+                restated = period.label in truth.management_accounts.get(
+                    metric, {})
+                accounts_observations.append({
+                    "metric": metric,
+                    "original_label": item.workbook_label,
+                    "value_original": _round(printed),
+                    "unit_original": truth.workbook_unit.value,
+                    "currency_original": truth.currency,
+                    "value_standardised": _round(
+                        -raw if item.is_cost else raw),
+                    "period_label": period.label,
+                    "period_start": period.start.isoformat(),
+                    "period_end": period.end.isoformat(),
+                    "period_type": E.PeriodType.FISCAL_YEAR.value,
+                    "basis": period.basis.value,
+                    "is_adjusted_as_presented": item.is_adjusted,
+                    "source_sheet": "Management Accounts",
+                    "source_cell": f"{get_column_letter(FIRST_PERIOD_COL + index)}{row}",
+                    "extraction_method": E.ExtractionMethod.OPENPYXL_DIRECT.value,
+                    "restated_relative_to_cim": restated,
+                })
+
     key = {
         "company": {
             "name": truth.name,
@@ -163,7 +205,15 @@ def build(truth: CompanyTruth, out_dir: Path, cim_pages: dict[str, int],
                 "observations": workbook_observations,
                 "claims": [],
             },
-        ],
+        ]
+        + ([{
+            "filename": accounts_filename,
+            "document_type": E.DocumentType.MANAGEMENT_ACCOUNTS.value,
+            "printed_unit": truth.workbook_unit.value,
+            "basis_note": "Continuing operations",
+            "observations": accounts_observations,
+            "claims": [],
+        }] if accounts_observations else []),
         "structured_sections": {
             # The cap table must total 100%. PAPER_SPEC B6 requires that
             # check; this is what it runs against.

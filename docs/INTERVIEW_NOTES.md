@@ -152,3 +152,42 @@ against real content, and I would say so: it establishes the fixture is
 the right *shape*, not that it is representative in substance.
 
 ---
+
+## Step 2b — Larkspur and Calderwood (2026-09-11)
+
+**What we built.** Two more fixture companies, in the slide format, and
+the machinery their defects needed: an over-spanning merged header, an
+inert check formula, and a second restating document.
+
+**Design decision.** The internal consistency check is now driven by
+`breakdown_axis` rather than by hardcoded metric names. Calderwood
+presents operating costs twice — by nature and by function — for one cost
+base, so each axis is checked against total opex independently. Summing
+every expense row gives exactly twice the real figure.
+
+**Alternative rejected.** Listing the expense metrics to sum. It worked
+for one company and would have silently double counted the moment a
+second axis appeared, which is precisely the error the field exists to
+prevent.
+
+**Why three year ends.** December, June and March. Larkspur's FY24 runs
+July 2023 to June 2024. Any code assuming a fiscal year matches a
+calendar year now fails a test rather than producing a plausible wrong
+answer on a live deal.
+
+**The defect I am most pleased with.** Calderwood's CIM says FY24 revenue
+was 31.8; its management accounts, issued later, say 30.9 — restated to
+exclude a divested line. Neither document is wrong. This is the case the
+whole schema was built around, and until now nothing exercised it.
+
+**Interviewer question.** *"Two of your documents disagree. Which one
+does your system believe?"*
+Neither, and that is the design. Both observations stay live, each
+carrying its own source and basis, and the conflict is surfaced rather
+than resolved. `financial_observations` has no uniqueness constraint on
+(deal, metric, period) specifically so that this is representable. What
+gets stored is the analyst's explanation of *why* they differ — decision
+011 — so the finding is raised once rather than every time the deal is
+opened.
+
+---
