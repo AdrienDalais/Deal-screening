@@ -191,3 +191,38 @@ gets stored is the analyst's explanation of *why* they differ — decision
 opened.
 
 ---
+
+## Step 3 — Calculations: signatures and specification (2026-09-11)
+
+**What Claude built.** `core/calculations.py` as signatures, docstrings
+and worked examples, plus 31 tests in `tests/test_calculations.py` with
+every expected value computed from the fixtures and shown with its
+arithmetic. The bodies are mine to write.
+
+**The design decision.** Every function takes `Figure` objects, not bare
+floats. A function handed `(11_600_000, 15_400_000)` can divide them but
+cannot know that one is an actual and the other a forecast, or that they
+are in different currencies. It returns 32.8% growth, confidently, and is
+wrong in a way nobody can see. Passing the context alongside the number
+is what allows the function to refuse.
+
+**Alternative rejected.** Bare floats with validation performed by the
+caller. Simpler functions, but the check then lives in every call site
+and is omitted in one of them eventually — and the failure is silent.
+
+**The distinction I have to hold while writing these.** Returning None
+and raising are not interchangeable. None means the inputs were fine and
+the answer does not exist: a figure is missing, a denominator is zero.
+Raising means the inputs should never have been combined. Conflating
+them either hides a real data problem or turns an ordinary gap into a
+crash.
+
+**Interviewer question.** *"Why does your growth function raise on a
+forecast rather than returning the number with a warning?"*
+Because a warning has to be carried, displayed and read, and at some
+point it will not be. The number would be in the scorecard regardless.
+Growth from an actual to a management forecast is not a growth rate, it
+is a plan; there is no context in which reporting it as growth is
+correct, so the function should not be able to produce it.
+
+---
