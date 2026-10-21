@@ -118,7 +118,47 @@ class Figure:
 
 
 # =====================================================================
-# The functions. Bodies are Adrien's.
+# A shared guard
+# =====================================================================
+
+def _require_comparable(a: Figure, b: Figure) -> None:
+    """Raise if two figures should never be combined.
+
+    The leading underscore is a convention: it marks this as internal to
+    the module. Nothing outside calculations.py should call it.
+
+    Four of the functions below need exactly these checks, so they live
+    in one place. If the rule for comparing two figures ever changes, it
+    changes once rather than in four places that must be kept in step.
+
+    Returns nothing. It either raises or it does not — a guard, not a
+    calculation.
+    """
+    if a.currency != b.currency:
+        raise CurrencyMismatch(
+            f"{a.metric} is in {a.currency} and {b.metric} is in "
+            f"{b.currency}. Currencies are never silently converted."
+        )
+    if a.unit != b.unit:
+        raise UnitMismatch(
+            f"{a.metric} is in {a.unit.value} and {b.metric} is in "
+            f"{b.unit.value}. Standardise before calculating."
+        )
+    if not (a.is_monetary and b.is_monetary):
+        raise UnitMismatch(
+            f"{a.metric} ({a.unit.value}) and {b.metric} "
+            f"({b.unit.value}) are not both monetary quantities."
+        )
+    if a.basis != b.basis:
+        raise BasisMismatch(
+            f"{a.metric} {a.period_label} is {a.basis.value} but "
+            f"{b.metric} {b.period_label} is {b.basis.value}. A figure "
+            f"spanning a change of basis is a plan, not a measurement."
+        )
+
+
+# =====================================================================
+# The functions
 # =====================================================================
 
 def revenue_growth(earlier: Figure, later: Figure) -> float | None:
@@ -143,7 +183,21 @@ def revenue_growth(earlier: Figure, later: Figure) -> float | None:
         FY23 revenue 11_600_000, FY24 revenue 15_400_000
         15_400_000 / 11_600_000 - 1 = 0.327586...
     """
-    raise NotImplementedError("Adrien writes this one")
+    _require_comparable(earlier, later)
+
+    if earlier.period_label == later.period_label:
+        raise PeriodMismatch(
+            f"Both figures are for {earlier.period_label}. Growth needs "
+            f"two different periods."
+        )
+
+    if earlier.value is None or later.value is None:
+        return None
+
+    if earlier.value == 0:
+        return None
+
+    return later.value / earlier.value - 1
 
 
 def cagr(earlier: Figure, later: Figure, years: float) -> float | None:
@@ -158,7 +212,29 @@ def cagr(earlier: Figure, later: Figure, years: float) -> float | None:
     across a sign change is not a real number, and numpy would happily
     hand you a complex one.
     """
-    raise NotImplementedError("Adrien writes this one")
+    _require_comparable(earlier, later)
+
+    if earlier.period_label == later.period_label:
+        raise PeriodMismatch(
+            f"Both figures are for {earlier.period_label}. A compound "
+            f"rate needs two different periods."
+        )
+
+    if earlier.value is None or later.value is None:
+        return None
+
+    if years == 0 or earlier.value == 0:
+        return None
+
+    # A compound rate across a sign change has no real solution: raising
+    # a negative ratio to a fractional power gives a complex number, and
+    # a complex number has no place in a scorecard. A business that went
+    # from a loss to a profit grew, but not at a rate, and saying so is
+    # more honest than printing something.
+    if earlier.value < 0 or later.value < 0:
+        return None
+
+    return (later.value / earlier.value) ** (1 / years) - 1
 
 
 def share_of_total(part: Figure, total: Figure) -> float | None:
@@ -176,7 +252,21 @@ def share_of_total(part: Figure, total: Figure) -> float | None:
     Worked example from Thornbury FY24:
         recurring 12_300_000 / revenue 15_400_000 = 0.798701...
     """
-    raise NotImplementedError("Adrien writes this one")
+    _require_comparable(part, total)
+
+    if part.period_label != total.period_label:
+        raise PeriodMismatch(
+            f"{part.metric} is for {part.period_label} but {total.metric} "
+            f"is for {total.period_label}. A share must describe one period."
+        )
+
+    if part.value is None or total.value is None:
+        return None
+
+    if total.value == 0:
+        return None
+
+    return part.value / total.value
 
 
 def margin(numerator: Figure, revenue: Figure) -> float | None:
@@ -199,7 +289,25 @@ def margin(numerator: Figure, revenue: Figure) -> float | None:
         gross profit 10_900_000 / revenue 15_400_000 = 0.707792...
         adj. EBITDA   1_500_000 / revenue 15_400_000 = 0.097402...
     """
-    raise NotImplementedError("Adrien writes this one")
+    _require_comparable(numerator, revenue)
+
+    if numerator.period_label != revenue.period_label:
+        raise PeriodMismatch(
+            f"{numerator.metric} is for {numerator.period_label} but "
+            f"revenue is for {revenue.period_label}. A margin must "
+            f"describe one period."
+        )
+
+    if numerator.value is None or revenue.value is None:
+        return None
+
+    if revenue.value == 0:
+        return None
+
+    # No special handling for negative results. A loss-making business
+    # has a negative margin, and that is a fact to report rather than a
+    # value to clean up.
+    return numerator.value / revenue.value
 
 
 def variant_growth_metric(variant: RuleOf40Variant) -> str:
@@ -213,7 +321,11 @@ def variant_growth_metric(variant: RuleOf40Variant) -> str:
     that knows what a variant name means, and reconciliation will need
     the same mapping to check a label against the inputs actually used.
     """
-    raise NotImplementedError("Adrien writes this one")
+    return {
+        RuleOf40Variant.ARR_GROWTH_PLUS_EBITDA_MARGIN: "arr",
+        RuleOf40Variant.CARR_GROWTH_PLUS_EBITDA_MARGIN: "carr",
+        RuleOf40Variant.SALES_GROWTH_PLUS_EBITDA_MARGIN: "revenue",
+    }[variant]
 
 
 def rule_of_40(
@@ -248,4 +360,31 @@ def rule_of_40(
         EBITDA margin 1_500_000 / 15_400_000    = 0.097402...
         total                                   = 0.479755...
     """
-    raise NotImplementedError("Adrien writes this one")
+    growth_metric = variant_growth_metric(variant)
+
+    # The variant names its own input. If that input is absent, the
+    # question cannot be answered as asked — and answering it with a
+    # different input would produce a number that matches the label and
+    # is not what the label says. Decision 008.
+    for period_name, figures in (("current", current), ("prior", prior)):
+        if growth_metric not in figures:
+            raise VariantInputMissing(
+                f"{variant.value} requires {growth_metric}, which is not "
+                f"present in the {period_name} period. This deal does not "
+                f"report {growth_metric}."
+            )
+
+    for required in ("revenue", "adjusted_ebitda"):
+        if required not in current:
+            raise VariantInputMissing(
+                f"{variant.value} requires {required} for the current "
+                f"period to form the EBITDA margin."
+            )
+
+    growth = revenue_growth(prior[growth_metric], current[growth_metric])
+    ebitda_margin = margin(current["adjusted_ebitda"], current["revenue"])
+
+    if growth is None or ebitda_margin is None:
+        return None
+
+    return growth + ebitda_margin

@@ -262,3 +262,40 @@ and nobody would ever learn that the model handed over by the seller had
 a broken formula in it.
 
 ---
+
+## Step 3 complete — calculations (2026-10-21)
+
+**What exists.** Six functions, 31 tests, all passing. Growth, CAGR,
+share of total, margin, the Rule of 40 variant mapping, and Rule of 40
+itself.
+
+**The design decision, made before any code.** Every function takes a
+`Figure` — value plus currency, unit, basis and period — rather than a
+bare float. A function handed two numbers can divide them but cannot know
+that one is an actual and the other a forecast. It returns a confident,
+invisible error.
+
+**The distinction the module is built on.** Raising and returning None
+are not interchangeable. None means the inputs were fine and no answer
+exists: a figure is missing, a denominator is zero, a compound rate
+crosses zero. Raising means the inputs should never have been combined.
+
+**A validation that came free.** `cagr` with `years=1` must equal
+`revenue_growth` exactly, and a test asserts it. Two independent
+implementations agreeing is stronger evidence than either one looking
+right.
+
+**Honest note on authorship.** See docs/DECISIONS.md #012. Claude wrote
+most of these implementations with line-by-line explanation, after four
+failed attempts that failed on Python syntax rather than on the finance.
+I wrote the arithmetic of `revenue_growth` myself.
+
+**Interviewer question.** *"Walk me through why your growth function
+raises instead of returning a number."*
+Growth from an actual to a management forecast is not a growth rate, it
+is a plan. A warning would have to be carried, displayed and read, and
+eventually one of those fails while the number sits in the scorecard
+regardless. There is no context in which reporting it as growth is
+correct, so the function should not be able to produce it.
+
+---

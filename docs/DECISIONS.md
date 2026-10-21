@@ -276,3 +276,43 @@ must be revisited.
 **Built when.** Week-one step 5. Recorded now because it came out of
 describing how CIMs actually behave, and it changes what reconciliation
 returns.
+
+---
+
+## 2026-10-21 — 012: How core/calculations.py came to be written
+
+**What happened.** CLAUDE.md section 2 reserves `core/calculations.py`
+and `core/reconciliation.py` for Adrien to write, with Claude providing
+signatures, tests and review only. Partway through step 3 that was
+changed, at Adrien's instruction, to Claude writing the implementations
+with a line-by-line explanation of each one.
+
+**Why it is recorded.** A decision log that omits the decisions that
+went differently from the plan is not a decision log. Anyone reading
+this repository — including an interviewer — should be able to see which
+parts were written by whom.
+
+**The reason for the change.** Four successive attempts failed on
+mechanics rather than on the finance: terminal commands pasted into the
+source file, illustrative code fragments pasted as if they were real
+code, a docstring terminator deleted, and an indentation error. The
+obstacle was Python syntax and editor handling, not the calculations.
+Explaining complete, working code in place turned out to be a better way
+through than describing fragments to be assembled.
+
+**What was retained.** Adrien wrote the arithmetic of `revenue_growth`
+himself — the first three tests to pass. The design decisions stand as
+originally specified and were made before any implementation: figures as
+value objects rather than bare floats, and the distinction between
+raising and returning None.
+
+**What was lost.** The original intent was that this module be
+defensible line by line because it had been typed line by line. That
+guarantee is weaker now. The compensating measure is this entry, plus
+the explanations recorded in the session — the code should still be
+defensible, but on the basis of having been understood rather than
+having been authored.
+
+**Still outstanding.** `core/reconciliation.py` is unwritten. Whether
+the same approach applies there is an open question, and worth deciding
+deliberately rather than by drift.
