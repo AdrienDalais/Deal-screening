@@ -25,13 +25,51 @@ from openpyxl.worksheet.worksheet import Worksheet
 FIRST_PERIOD_COLUMN = 4   # column D, matching the fixture layout
 
 from ingestion.labels import is_cost_metric, map_label
-from storage.enums import Basis, ExtractionMethod, PeriodType, Unit
+from storage.enums import (
+    Basis, BreakdownAxis, ExtractionMethod, PeriodType, Unit,
+)
 
 UNIT_WORDS = {
     "units": Unit.UNITS, "thousands": Unit.THOUSANDS,
     "millions": Unit.MILLIONS, "billions": Unit.BILLIONS,
     "k": Unit.THOUSANDS, "m": Unit.MILLIONS, "000s": Unit.THOUSANDS,
 }
+# Metrics that identify each cut of the cost base when a sheet presents
+# both. Used only to decide which axis a row belongs to on a sheet that
+# has been shown to carry two.
+_NATURE_MARKERS = {"personnel_expenses", "non_personnel_expenses"}
+_FUNCTION_MARKERS = {"product_and_engineering", "sales_and_marketing",
+                     "general_and_admin", "implementation", "other_opex"}
+
+
+def _axis_assignment(metrics: set[str]) -> dict[str, BreakdownAxis]:
+    """Decide which breakdown axis each expense row belongs to.
+
+    The axis is a property of the sheet, not of the metric name. One
+    company's "Personnel" row sits inside a functional breakdown
+    alongside S&M and G&A; another's is one half of a breakdown by
+    nature presented beside a functional one. A static map would
+    double count the first and miss the second.
+
+    So: a sheet carrying markers of *both* cuts is treated as dual-axis
+    and each row assigned accordingly. A sheet carrying one cut has all
+    its expense rows on a single axis, whatever they are called.
+    """
+    has_nature = bool(metrics & {"non_personnel_expenses"})
+    has_function = bool(metrics & (_FUNCTION_MARKERS - {"other_opex"}))
+
+    assignment: dict[str, BreakdownAxis] = {"total_opex": BreakdownAxis.TOTAL}
+    if has_nature and has_function:
+        for metric in metrics & _NATURE_MARKERS:
+            assignment[metric] = BreakdownAxis.BY_NATURE
+        for metric in metrics & _FUNCTION_MARKERS:
+            assignment[metric] = BreakdownAxis.BY_FUNCTION
+    else:
+        for metric in (metrics & (_NATURE_MARKERS | _FUNCTION_MARKERS)):
+            assignment[metric] = BreakdownAxis.BY_FUNCTION
+    return assignment
+
+
 MONTH_NUMBER = {m: i for i, m in enumerate(
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
      "Nov", "Dec"], start=1)}
@@ -52,6 +90,7 @@ class ExtractedObservation:
     basis: Basis
     source_sheet: str
     source_cell: str
+    breakdown_axis: BreakdownAxis = BreakdownAxis.NOT_APPLICABLE
     extraction_method: ExtractionMethod = ExtractionMethod.OPENPYXL_DIRECT
     needs_review: bool = False
     ambiguity_reason: str | None = None
@@ -213,6 +252,18 @@ def extract(path: Path | str, sheet_name: str | None = None
         columns.append((col, label.strip().rstrip("AEFPaefp") or label.strip(),
                         basis, ambiguity))
 
+    present: set[str] = set()
+    for row in range(header_row + 1, sheet.max_row + 1):
+        label = sheet.cell(row=row, column=2).value
+        if not isinstance(label, str) or not label.strip():
+            continue
+        if label.strip().lower() == "checks":
+            break
+        mapped = map_label(label)
+        if mapped:
+            present.add(mapped)
+    axes = _axis_assignment(present)
+
     for row in range(header_row + 1, sheet.max_row + 1):
         label = sheet.cell(row=row, column=2).value
         if not isinstance(label, str) or not label.strip():
@@ -254,6 +305,7 @@ def extract(path: Path | str, sheet_name: str | None = None
                 basis=basis,
                 source_sheet=sheet.title,
                 source_cell=f"{get_column_letter(col)}{row}",
+                breakdown_axis=axes.get(metric, BreakdownAxis.NOT_APPLICABLE),
                 needs_review=ambiguity is not None,
                 ambiguity_reason=ambiguity,
                 is_adjusted_as_presented="adj" in label.strip().lower(),

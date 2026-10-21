@@ -299,3 +299,51 @@ regardless. There is no context in which reporting it as growth is
 correct, so the function should not be able to produce it.
 
 ---
+
+## Step 5 — Reconciliation (2026-10-21)
+
+**What exists.** Ten checks, 42 tests, and an end-to-end suite that runs
+extraction and reconciliation over the fixtures on disk and verifies each
+planted defect produces a finding.
+
+**Design decision.** Every issue carries a fingerprint: a hash of the
+check, metric, period and the figures involved. A resolution recorded
+against a fingerprint survives recomputation, and changing any figure
+changes the fingerprint — which invalidates the resolution
+automatically. That is the mechanism behind decision 011: issues stay
+computed, resolutions get stored.
+
+**Severity distinguishes three things, not two.** ERROR means a figure is
+demonstrably wrong. DISAGREE means two sources differ and neither is
+necessarily wrong. WARNING means worth a look. Collapsing DISAGREE into
+ERROR would mean a CIM restating a figure on a different basis looked
+like a mistake, and the issues list would be ignored within a week.
+
+**Two defects were silently not caught, and running it end to end was
+the only way to find out.** Both unit test suites passed completely while
+two of the nine planted defects produced no finding at all.
+
+The first: the extractor dropped `breakdown_axis`, so the
+overlapping-opex check had nothing to work with. The fix had a trap in
+it — the axis is a property of the *sheet*, not the metric. Thornbury's
+"Personnel" sits inside a functional breakdown; Calderwood's is half of a
+breakdown by nature presented beside a functional one. A static
+metric-to-axis map would have double counted the first and missed the
+second, so it is inferred per sheet.
+
+The second: extraction resolves Larkspur's contradictory basis signal to
+one value and flags the row, so by the time reconciliation saw it there
+was one basis per period and nothing to find. The flag was correct; it
+just never travelled. A defect detected and not reported is a defect
+missed.
+
+**Interviewer question.** *"Your unit tests all passed and two of nine
+defects weren't caught. What does that tell you about your tests?"*
+That they tested the components and not the seams. Each check worked on
+data constructed to exercise it, and the data it actually receives is
+built by a different module that was dropping a field. The fix was a
+suite that runs the real pipeline over the real fixtures and asserts on
+declared defects rather than on function behaviour — and that suite is
+now the one I would run first.
+
+---
