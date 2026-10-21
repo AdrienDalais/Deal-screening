@@ -131,15 +131,21 @@ def _one(observations: Sequence[Observation], metric: str, period: str
          ) -> Observation | None:
     """The single live figure for a metric and period, or None.
 
-    Returns None when there are none *and* when there are several: a
-    check that silently picked one of two conflicting figures would be
-    reporting on data it invented. The conflict itself is reported by
-    check_sources_agree.
+    Returns the figure when several sources state it and they agree:
+    corroboration should not blind a check. Returns None only when they
+    genuinely differ, because a check that silently picked one of two
+    conflicting figures would be reporting on data it chose. The
+    conflict itself is reported by check_sources_agree.
     """
     matches = [o for o in observations
                if o.metric == metric and o.period_label == period
                and o.value_standardised is not None]
-    return matches[0] if len(matches) == 1 else None
+    if not matches:
+        return None
+
+    spread = (max(o.value_standardised for o in matches)
+              - min(o.value_standardised for o in matches))
+    return matches[0] if spread <= TOLERANCE else None
 
 
 # =====================================================================
