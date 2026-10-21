@@ -347,3 +347,37 @@ declared defects rather than on function behaviour — and that suite is
 now the one I would run first.
 
 ---
+
+## Step 6 — The interface (2026-10-21)
+
+**What exists.** A Streamlit app with four tabs: scorecard, findings,
+evidence, and a comparison across deals. `app/` contains formatting and
+nothing else — every figure on screen comes from `core/pipeline.py`,
+which the test suite covers. The app cannot compute a number of its own.
+
+**Design decision.** A blank cell in the scorecard is never a zero and
+never a rounding. It means the figure cannot honestly be shown, for one
+of three reasons: it is absent, two sources state it differently and
+neither has been chosen, or the calculation would have spanned a change
+of basis. The reason is always in the findings tab.
+
+**Alternative rejected.** Showing the figure with a warning icon. The
+number would be read, the icon would not, and by the time it reached a
+paper the caveat would be gone. If a figure cannot be defended it should
+not be displayed.
+
+**What the comparison tab deliberately does not have.** An overall score.
+Three currencies and three year ends sit in that table — Larkspur's FY24
+runs July to June, Calderwood's April to March. The figures are
+comparable; the companies are not reducible to one number, and producing
+one would be the single most misleading thing this tool could do.
+
+**Interviewer question.** *"Why is there no business logic in the
+interface?"*
+Because anything computed there is untested and unversioned. If a margin
+were worked out in a Streamlit callback it would exist in exactly one
+place, be covered by no test, and disagree with the same margin computed
+anywhere else the moment either changed. The app formats what the
+pipeline produces.
+
+---

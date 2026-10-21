@@ -24,6 +24,24 @@ Two rules follow, and they drive nearly every design choice:
    different FY23 revenue produce two live rows. The system's job is to
    surface the conflict, not to pick a winner.
 
+## Running it
+
+```bash
+streamlit run app/main.py
+```
+
+Opens at http://localhost:8501 with the three synthetic companies
+loaded. Four tabs: the scorecard, the findings reconciliation produced,
+every extracted figure with the cell it came from, and a comparison
+across deals.
+
+Or without the interface:
+
+```bash
+python -m tools.run_deal            # all three
+python -m tools.run_deal larkspur   # one
+```
+
 ## Setup
 
 Requires Python 3.12.
