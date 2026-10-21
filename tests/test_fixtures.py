@@ -92,7 +92,7 @@ def test_every_workbook_figure_is_in_the_cell_the_key_cites(key, sheet):
 
 
 def test_the_workbook_states_its_units(sheet):
-    """The real template never did. PAPER_SPEC B1 makes it mandatory."""
+    """A sheet whose scale is only implied is not safely readable."""
     labels = {sheet.cell(row=r, column=2).value for r in range(1, 10)}
     assert "Units" in labels
     assert sheet["C4"].value == "thousands"

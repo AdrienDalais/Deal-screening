@@ -321,7 +321,7 @@ class CheckRow:
     `evaluable` is the field that matters. A check whose formula cannot
     be resolved must be reported in words as not evaluable — never
     rendered blank, as a dash, or as an error code, because all three
-    read as "fine" to a tired reader. See docs/PAPER_SPEC.md B6.
+    read as "fine" to a tired reader.
     """
 
     label: str

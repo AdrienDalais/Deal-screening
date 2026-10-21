@@ -132,8 +132,8 @@ def _retention() -> list[RetentionRow]:
 
 
 def _cap_table() -> list[Shareholder]:
-    """Holdings total 100%. PAPER_SPEC B6 requires that check to have
-    something to run against."""
+    """Holdings total 100%, so the cap-table check has something to
+    run against."""
     return [
         Shareholder("A. Whitfield (CEO, co-founder)", 24.5, "founder"),
         Shareholder("R. Nakamura (CTO, co-founder)", 21.0, "founder"),

@@ -215,8 +215,8 @@ def build(truth: CompanyTruth, out_dir: Path, cim_pages: dict[str, int],
             "claims": [],
         }] if accounts_observations else []),
         "structured_sections": {
-            # The cap table must total 100%. PAPER_SPEC B6 requires that
-            # check; this is what it runs against.
+            # The cap table must total 100%. This is what that check
+            # runs against.
             "cap_table": [
                 {"name": h.name, "holding_pct": h.holding_pct,
                  "category": h.category}

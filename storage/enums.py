@@ -288,7 +288,7 @@ class AssessmentDimension(StrEnum):
 
 
 class Rating(StrEnum):
-    """Single normalised scale. See docs/PAPER_SPEC.md section A13.
+    """Single normalised scale for rated qualitative dimensions.
 
     The source templates mixed a quality scale (Good, Med) with a
     directional one (Strong in favour, Neutral). One ordered scale.

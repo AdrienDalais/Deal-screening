@@ -1,8 +1,8 @@
 """Generate a financials workbook from a CompanyTruth.
 
-Layout follows docs/PAPER_SPEC.md Part B: a header block stating currency
-and units, a merged header separating historicals from forecasts, one
-column per period, one row per line item, and a checks block.
+Layout: a header block stating currency and units, a merged header
+separating historicals from forecasts, one column per period, one row
+per line item, and a checks block.
 
 Costs are written negative, matching the convention real working models
 use, so that gross profit is revenue *plus* cost of sales.
@@ -46,9 +46,9 @@ def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
     ws.title = "Scorecard"
 
     # --- header block ------------------------------------------------
-    # Units are stated. The real template omitted them; PAPER_SPEC B1
-    # makes them mandatory, and the generator cannot write a sheet
-    # without one.
+    # Units are a required header field. A sheet whose scale is only
+    # implied is ambiguous by a factor of 1,000 or more, so the
+    # generator cannot write one without stating it.
     header = [
         ("Company", truth.name),
         ("Currency", truth.currency),
@@ -128,7 +128,7 @@ def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
     # --- checks -------------------------------------------------------
     # Every check is a live formula with a stated expectation. A check
     # that cannot be evaluated must say so in words, never render blank
-    # or as an error code (PAPER_SPEC B6).
+    # or as an error code: all three read as 'fine' to a tired reader.
     row += 1
     ws.cell(row=row, column=LABEL_COL, value="Checks").font = BOLD
     row += 1

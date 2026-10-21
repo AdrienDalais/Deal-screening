@@ -166,7 +166,7 @@ principles. All six are adopted:
    thresholds and reports *n* of *N*; that score should be recomputed
    from reviewed data, not typed.
 6. **`assessments`** table for rated qualitative dimensions, on a single
-   normalised scale (see `docs/PAPER_SPEC.md` §A13).
+   normalised ordered scale.
 
 **Why this is worth recording.** The four defects that motivated these
 additions were found in live working files, not invented as test cases:
