@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -29,6 +30,9 @@ from reportlab.platypus import (
 from storage import enums as E
 from tests.fixtures import prose
 from tests.fixtures.truth import CompanyTruth
+
+# Deterministic output — see build_cim_slides.
+rl_config.invariant = 1
 
 _styles = getSampleStyleSheet()
 BODY = ParagraphStyle("body", parent=_styles["BodyText"], fontSize=10,

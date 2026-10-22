@@ -19,12 +19,18 @@ are positioned layouts, not flowing text.
 
 from __future__ import annotations
 
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
 from reportlab.lib.colors import Color, HexColor
 from reportlab.lib.utils import ImageReader
+from reportlab import rl_config
 from reportlab.pdfgen import canvas as pdfcanvas
+
+# Deterministic output: suppresses the embedded creation date and
+# random document id that otherwise differ on every run.
+rl_config.invariant = 1
 
 from storage import enums as E
 from tests.fixtures import prose, slide_art

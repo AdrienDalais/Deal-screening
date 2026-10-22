@@ -31,3 +31,7 @@ mistralai>=1.0
 
 # Testing
 pytest>=8.2
+
+# Not required to run or test the project. The README screenshots were
+# captured with playwright; regenerate them with tools/screenshots.py
+# after `pip install playwright && playwright install chromium`.

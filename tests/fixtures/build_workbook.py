@@ -13,6 +13,9 @@ in the output can be traced to one line of code.
 
 from __future__ import annotations
 
+import re
+import zipfile
+from datetime import datetime
 from pathlib import Path
 
 from openpyxl import Workbook
@@ -25,7 +28,45 @@ from tests.fixtures.truth import CompanyTruth
 FIRST_PERIOD_COL = 4          # column D
 PERIOD_HEADER_ROW = 8
 LABEL_COL = 2                 # column B
+# openpyxl stamps the workbook with the time it was saved, so a
+# rebuild differs from its predecessor by a few bytes. Pinned, so
+# that a difference in a fixture means a difference that matters.
+FIXTURE_TIMESTAMP = datetime(2026, 1, 1, 0, 0, 0)
+
 BOLD = Font(bold=True)
+
+
+def _normalise_archive(path: Path) -> None:
+    """Rewrite an .xlsx so it is byte-identical on every rebuild.
+
+    An .xlsx is a zip, and a zip records the time each entry was written.
+    Pinning the workbook's own created/modified properties is not enough:
+    the archive itself still differs on every save, so a rebuild looks
+    like a change when nothing has changed.
+
+    Entries are rewritten with a fixed timestamp, in sorted order, with
+    fixed compression. The spreadsheet is unaffected — only the envelope
+    around it.
+    """
+    with zipfile.ZipFile(path) as archive:
+        entries = sorted(archive.namelist())
+        contents = {name: archive.read(name) for name in entries}
+
+    # openpyxl rewrites dcterms:modified at save time whatever the
+    # workbook properties say, so it is pinned here instead.
+    core = "docProps/core.xml"
+    if core in contents:
+        contents[core] = re.sub(
+            rb"(<dcterms:modified[^>]*>)[^<]*(</dcterms:modified>)",
+            rb"\g<1>2026-01-01T00:00:00Z\g<2>", contents[core])
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED,
+                         compresslevel=9) as archive:
+        for name in entries:
+            info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o600 << 16
+            archive.writestr(info, contents[name])
 UNDERLINE = Border(bottom=Side(style="thin"))
 
 
@@ -177,9 +218,13 @@ def build(truth: CompanyTruth, out_dir: Path) -> tuple[Path, dict[str, int]]:
     for index in range(len(truth.periods)):
         ws.column_dimensions[get_column_letter(FIRST_PERIOD_COL + index)].width = 13
 
+    wb.properties.created = FIXTURE_TIMESTAMP
+    wb.properties.modified = FIXTURE_TIMESTAMP
+    wb.properties.creator = "deal-screening-workbench"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{truth.slug}_financials.xlsx"
     wb.save(path)
+    _normalise_archive(path)
     return path, row_of_metric
 
 
@@ -244,7 +289,11 @@ def build_management_accounts(truth: CompanyTruth,
         row += 1
 
     ws.column_dimensions["B"].width = 34
+    wb.properties.created = FIXTURE_TIMESTAMP
+    wb.properties.modified = FIXTURE_TIMESTAMP
+    wb.properties.creator = "deal-screening-workbench"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{truth.slug}_management_accounts.xlsx"
     wb.save(path)
+    _normalise_archive(path)
     return path, row_of_metric

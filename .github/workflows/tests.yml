@@ -1,0 +1,45 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.lock.txt
+
+      # The fixtures are committed, but rebuilding them here proves the
+      # generators still produce the documents the answer keys describe.
+      # A fixture that can no longer be regenerated is a fixture nobody
+      # can safely change.
+      - name: Rebuild the synthetic fixtures
+        run: python -m tests.fixtures.build_all
+
+      - name: Confirm rebuilding changed nothing
+        run: |
+          if ! git diff --quiet -- tests/fixtures; then
+            echo "Rebuilding the fixtures produced different files."
+            git diff --stat -- tests/fixtures
+            exit 1
+          fi
+          echo "Fixtures are reproducible."
+
+      - name: Run the test suite
+        run: pytest tests/ -q
+
+      # The rule that matters most, asserted on its own so a failure is
+      # unmissable in the log rather than buried among 179 results.
+      - name: Confirm every planted defect is still caught
+        run: pytest tests/test_defects_caught.py -v
