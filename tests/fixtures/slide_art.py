@@ -17,14 +17,16 @@ from PIL import Image, ImageDraw
 
 
 def _font():
+    """Pillow's bundled font, at two sizes.
+
+    Deliberately not a system font. Reaching for Arial or Helvetica works
+    on a Mac and silently falls back to something else on Linux, which
+    would make these images — and therefore the PDFs that embed them —
+    differ between a developer's machine and CI. The bundled font is the
+    same everywhere, which is what lets a rebuild be byte-identical.
+    """
     from PIL import ImageFont
-    for path in ("/System/Library/Fonts/Supplemental/Arial.ttf",
-                 "/System/Library/Fonts/Helvetica.ttc"):
-        try:
-            return ImageFont.truetype(path, 40), ImageFont.truetype(path, 26)
-        except Exception:
-            continue
-    return ImageFont.load_default(), ImageFont.load_default()
+    return ImageFont.load_default(size=40), ImageFont.load_default(size=26)
 
 
 def unreadable_chart(values: list[tuple[str, float]], title: str) -> bytes:
