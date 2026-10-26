@@ -356,3 +356,51 @@ suggest otherwise.
 **Rejected.** A flag on the call, or a check in the application code
 that assembles requests. Both leave a path where a caller who forgets
 reaches the model anyway. There is now no such path.
+
+---
+
+## 2026-10-26 — 014: A slide is read two ways, because a line means two things
+
+**Decision.** `ingestion/pdf.py` returns both `lines` and `rows` for
+every page, from the same fragments. `lines` splits where the horizontal
+gap is wide enough to be a column boundary; `rows` keeps everything at
+the same height together.
+
+**Why both.** Two bullets at the same height in different columns are
+unrelated sentences, and joining them makes retrieval attribute a figure
+to the wrong metric — in testing, "gross revenue retention of 94%"
+merged with "top 10 customer concentration" and the concentration metric
+acquired the retention figure. But a table row label and its six values
+sit at the same height with exactly the gap that separates those
+bullets, and splitting there breaks every financial table.
+
+Neither reading is correct in general. A slide is a layout, and what
+counts as one line depends on what you are looking for, so the module
+returns both and the caller chooses.
+
+**Reading order is recovered, not assumed.** PowerPoint writes text
+boxes in creation order, so roughly 18% of fragments in a real deck move
+*up* the page. Fragments are collected with composed coordinates and
+sorted by position.
+
+---
+
+## 2026-10-26 — 015: Keyword retrieval first, and measured, before embeddings
+
+**Decision.** `retrieval/keyword.py` finds sections by slide heading and
+KPI statements by vocabulary plus a value pattern. No embeddings.
+
+**Why.** An embedding index is only worth its complexity if it finds
+evidence this misses, and that cannot be known without measuring this
+first. The same argument applies to the LLM: whatever it scores is only
+meaningful against what deterministic reading already achieves.
+
+**Every finding keeps its sentence and page.** A figure without the
+words around it cannot be checked by a human, and every one of these is
+going to be checked by a human.
+
+**The decoys earned their place immediately.** The fixtures scatter
+currency figures that are not company revenue — a customer's ARR, a
+funding round, deferred income. The first version of retrieval returned
+the £2.1m largest-account figure as the market size. That was a real
+false positive caught by a deliberate trap rather than in production.
