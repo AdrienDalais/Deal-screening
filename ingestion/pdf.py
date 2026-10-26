@@ -105,12 +105,16 @@ class Page:
         only structure there is, and section-based retrieval depends on
         them entirely.
         """
-        near_top = [f for f in self.fragments
-                    if f.y > self.height * 0.80 and f.text.strip()]
-        if not near_top:
+        # A content slide puts its title at the top. A divider puts it
+        # in the middle of the page, so looking only at the top band
+        # finds no heading on exactly the slides that name the sections.
+        band = (self.fragments if self.is_sparse else
+                [f for f in self.fragments if f.y > self.height * 0.80])
+        candidates = [f for f in band if f.text.strip()]
+        if not candidates:
             return None
-        largest = max(near_top, key=lambda f: f.size)
-        same_line = [f for f in near_top
+        largest = max(candidates, key=lambda f: f.size)
+        same_line = [f for f in candidates
                      if abs(f.y - largest.y) <= LINE_TOLERANCE]
         same_line.sort(key=lambda f: f.x)
         return " ".join(f.text.strip() for f in same_line).strip() or None

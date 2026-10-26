@@ -114,12 +114,24 @@ def _normalise(text: str) -> str:
 
 
 def find_sections(document: Document) -> list[Section]:
-    """Locate each known section by its slide heading.
+    """Locate each section, delimited by the deck's divider slides.
 
-    A section runs from its heading until the next *different* section
-    begins, so continuation slides stay with the section they belong to.
+    A deck is structured by dividers — a slide carrying a section title
+    and almost nothing else — and every content slide after one belongs
+    to that section until the next divider.
+
+    Ending a section at the next *content* heading instead was the
+    obvious reading and the wrong one: each section then resolved to the
+    divider page alone, which by definition has no text on it, and
+    summarising it produced "NOT STATED" for sections the document
+    covers in full.
+
+    Where a deck has no dividers, every matching heading starts a
+    section and it runs to the next match.
     """
-    labelled: list[tuple[int, str, str]] = []
+    dividers: list[tuple[int, str, str]] = []
+    headings: list[tuple[int, str, str]] = []
+
     for page in document.pages:
         heading = page.heading
         if not heading:
@@ -127,17 +139,33 @@ def find_sections(document: Document) -> list[Section]:
         normalised = _normalise(heading)
         for name, keywords in SECTION_KEYWORDS.items():
             if any(word in normalised for word in keywords):
-                labelled.append((page.number, name, heading))
+                headings.append((page.number, name, heading))
+                if page.is_sparse:
+                    dividers.append((page.number, name, heading))
                 break
 
+    # A numbered title — "4. Customers and Retention" — is a section
+    # divider. An unnumbered sparse slide is a graphic: a logo wall, a
+    # chart, a photograph. Treating those as dividers truncates the
+    # section they sit inside to the page before them.
+    numbered = [d for d in dividers if re.match(r"^\d+[.)]\s", d[2].strip())]
+    if numbered:
+        dividers = numbered
+
+    markers = dividers or headings
     sections: list[Section] = []
-    for index, (number, name, heading) in enumerate(labelled):
-        end = (labelled[index + 1][0] - 1 if index + 1 < len(labelled)
-               else document.page_count)
-        if any(s.name == name for s in sections):
+    claimed: set[str] = set()
+
+    for index, (number, name, heading) in enumerate(markers):
+        if name in claimed:
             continue
+        end = (markers[index + 1][0] - 1 if index + 1 < len(markers)
+               else document.page_count)
         numbers = tuple(range(number, end + 1))
-        text = "\n".join(document.page(n).text for n in numbers)
+        text = "\n".join(document.page(n).text for n in numbers).strip()
+        if not text:
+            continue
+        claimed.add(name)
         sections.append(Section(name=name, heading=heading,
                                 pages=numbers, text=text))
     return sections

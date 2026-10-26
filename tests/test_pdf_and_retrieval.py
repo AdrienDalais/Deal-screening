@@ -84,11 +84,29 @@ def test_section_dividers_are_not_called_unreadable(document):
 # ---------------------------------------------------------------------
 
 def test_the_sections_a_screening_paper_needs_are_found(document):
+    """Sections are delimited by the deck's numbered dividers, so a
+    content slide such as "Investment Highlights" is folded into the
+    section it sits in rather than becoming one of its own. That is the
+    document's own structure, not ours."""
     doc, _ = document
-    found = {s.name for s in find_sections(doc)}
-    for required in ("executive_summary", "investment_highlights",
-                     "financials", "management", "market"):
-        assert required in found, f"{required} not located"
+    sections = {s.name: s for s in find_sections(doc)}
+    for required in ("executive_summary", "business_overview",
+                     "financials", "management", "market", "customers"):
+        assert required in sections, f"{required} not located"
+
+    for section in sections.values():
+        assert len(section.text) > 500, (
+            f"{section.name} resolved to {len(section.text)} characters — "
+            f"a section boundary is wrong")
+
+
+def test_the_highlights_slide_is_inside_the_summary_section(document):
+    """The KPIs live on a content slide within the executive summary.
+    Folding it in must not lose it."""
+    doc, _ = document
+    summary = next(s for s in find_sections(doc)
+                   if s.name == "executive_summary")
+    assert "retention" in summary.text.lower()
 
 
 def test_stated_kpis_are_found_with_their_source_page(document):
