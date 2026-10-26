@@ -316,3 +316,43 @@ having been authored.
 **Still outstanding.** `core/reconciliation.py` is unwritten. Whether
 the same approach applies there is an open question, and worth deciding
 deliberately rather than by drift.
+
+---
+
+## 2026-10-26 — 013: Refusal happens before the network call, not after
+
+**Decision.** `llm/policy.py` decides whether a request may be sent. It
+contains no network code and imports no SDK, and `LLMProvider.send()` is
+the only way to reach a model — it runs the check first and a provider's
+own `_complete()` is reachable only through it.
+
+Two rules, in order. A confidential deal may only use a local provider.
+And only a document explicitly registered against that deal may be sent.
+
+**Why, given the database already enforces the first rule.** The
+`CHECK` constraint on `analysis_runs` rejects the *record* of a
+confidential deal against a hosted provider — which happens after the
+network request has already been made. The constraint prevents a false
+record; it does not prevent the disclosure. This runs first.
+
+**Why registration rather than a path.** A check that can discover its
+own inputs is not a check. Nothing in this project walks a directory:
+the caller names a document, the policy layer is handed the set of
+documents registered against that deal, and anything else is refused.
+`assert_may_send` never touches the filesystem, so it cannot be
+persuaded to read a file nobody registered.
+
+**The manifest.** Every permitted request produces a record of exactly
+what would leave the machine — deal, classification, provider, model,
+filename, content hash, character and token count — written before the
+call and kept whether or not it succeeds. An interrupted request still
+leaves evidence that it was attempted.
+
+**A refusal is not a failure.** `ProviderRefusal` propagates rather than
+becoming a failed `Completion`. A failure means something was tried; a
+refusal means nothing was sent, and recording it as a failure would
+suggest otherwise.
+
+**Rejected.** A flag on the call, or a check in the application code
+that assembles requests. Both leave a path where a caller who forgets
+reaches the model anyway. There is now no such path.
