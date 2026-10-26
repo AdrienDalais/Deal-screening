@@ -21,12 +21,12 @@ from pathlib import Path
 from ingestion.pdf import Document
 from llm.policy import RegisteredDocument, SendRequest
 from llm.provider import LLMProvider
-from retrieval.keyword import Section, find_sections
+from retrieval.keyword import find_slides
 from storage.enums import Confidentiality, RunStatus
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 PROMPT_NAME = "summarise_section"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 
 NOT_STATED = "NOT STATED"
 MAX_SENTENCES = 3
@@ -40,16 +40,39 @@ SPELLED_NUMBERS = (
     "fifty", "hundred", "thousand", "million", "billion",
 )
 
-# The sections worth putting in front of a reader, and the plain
-# question each one answers.
-SNAPSHOT_SECTIONS: dict[str, str] = {
-    "business_overview": "What the company does",
-    "executive_summary": "The problem it solves",
-    "product": "How the product works",
-    "customers": "Who buys it",
-    "market": "The market it sells into",
-    "management": "Who runs it",
-}
+@dataclass(frozen=True)
+class SnapshotItem:
+    """One question, and the slides likely to answer it.
+
+    Questions are pointed at slides rather than whole sections. A
+    section runs to twenty pages of which two are relevant, and a model
+    handed all twenty summarises the section instead of answering the
+    question.
+    """
+
+    key: str
+    question: str
+    headings: tuple[str, ...]
+
+
+SNAPSHOT_ITEMS: tuple[SnapshotItem, ...] = (
+    SnapshotItem("what_it_does", "What does this company do?",
+                 ("why the business exists", "executive summary",
+                  "business overview")),
+    SnapshotItem("problem", "What problem does it solve for its customers?",
+                 ("executive summary", "why the business exists")),
+    SnapshotItem("how_it_works", "How does the product actually work?",
+                 ("product", "differentiation")),
+    SnapshotItem("who_buys", "Who buys it, and why do they keep paying?",
+                 ("customers", "retention analysis")),
+    SnapshotItem("how_it_earns", "How does the company make its money?",
+                 ("customers", "business overview", "executive summary")),
+    SnapshotItem("market", "What market does it sell into, and who else "
+                           "is in it?",
+                 ("market", "competitive landscape")),
+    SnapshotItem("growth", "How does the company plan to grow?",
+                 ("growth plans", "business overview")),
+)
 
 
 class SummaryRejected(Exception):
@@ -97,7 +120,10 @@ def validate(text: str) -> str:
     model is not doing what was asked, and showing it anyway would mean
     the rules exist only on paper.
     """
-    cleaned = text.strip().strip('"')
+    # Models reach for markdown even when asked for plain sentences,
+    # and "**insurance brokers**" rendered literally looks like a bug.
+    cleaned = re.sub(r"\*{1,2}([^*]+)\*{1,2}", r"\1", text.strip())
+    cleaned = cleaned.replace("`", "").strip().strip('"')
 
     if not cleaned:
         raise SummaryRejected("empty response")
@@ -125,10 +151,12 @@ def validate(text: str) -> str:
     return cleaned
 
 
-def summarise_section(
+def summarise_item(
     provider: LLMProvider,
-    section: Section,
-    question: str,
+    item: SnapshotItem,
+    pages: tuple[int, ...],
+    text: str,
+    already_said: list[str],
     *,
     deal_name: str,
     confidentiality: Confidentiality,
@@ -136,15 +164,19 @@ def summarise_section(
     filename: str,
     deal_id: int | None = None,
 ) -> Summary:
-    prompt = load_prompt().format(section_name=section.heading,
-                                  section_text=section.text[:12_000])
+    prompt = load_prompt().format(
+        question=item.question,
+        section_text=text[:10_000],
+        already_said=("\n".join(f"- {line}" for line in already_said)
+                      or "- (nothing yet; this is the first part)"),
+    )
 
     request = SendRequest(
         deal_id=deal_id, deal_name=deal_name,
         confidentiality=confidentiality, provider=provider.provider,
         model_name=provider.model_name,
-        purpose=f"summarise:{section.name}",
-        document=RegisteredDocument(None, filename, section.text),
+        purpose=f"summarise:{item.key}",
+        document=RegisteredDocument(None, filename, text),
     )
 
     completion = provider.send(request, registered, prompt)
@@ -152,9 +184,9 @@ def summarise_section(
         raise SummaryRejected(completion.error_message or "request failed")
 
     return Summary(
-        key=section.name, question=question,
+        key=item.key, question=item.question,
         text=validate(completion.text),
-        source_pages=section.pages,
+        source_pages=pages,
         prompt_version=PROMPT_VERSION, model_name=provider.model_name,
         input_tokens=completion.input_tokens,
         output_tokens=completion.output_tokens,
@@ -175,21 +207,29 @@ def summarise_document(
     A failure is returned rather than raised, so that one rejected
     section does not cost the other five. What is shown is what passed.
     """
-    sections = {s.name: s for s in find_sections(document)}
     summaries: list[Summary] = []
     failures: list[tuple[str, str]] = []
+    already_said: list[str] = []
 
-    for name, question in SNAPSHOT_SECTIONS.items():
-        section = sections.get(name)
-        if section is None:
-            failures.append((name, "section not found in the document"))
+    for item in SNAPSHOT_ITEMS:
+        pages, text = find_slides(document, item.headings)
+        if not text:
+            failures.append((item.key, "no slide found for this question"))
             continue
         try:
-            summaries.append(summarise_section(
-                provider, section, question, deal_name=deal_name,
-                confidentiality=confidentiality, registered=registered,
-                filename=filename))
+            summary = summarise_item(
+                provider, item, pages, text, already_said,
+                deal_name=deal_name, confidentiality=confidentiality,
+                registered=registered, filename=filename)
         except SummaryRejected as error:
-            failures.append((name, str(error)))
+            failures.append((item.key, str(error)))
+            continue
+
+        summaries.append(summary)
+        if summary.text != NOT_STATED:
+            # Each answer becomes context for the next, so the briefing
+            # reads as one piece rather than eight restatements of what
+            # the company sells.
+            already_said.append(summary.text)
 
     return summaries, failures

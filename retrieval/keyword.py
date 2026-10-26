@@ -220,3 +220,29 @@ def find_kpis(document: Document,
                     unit_hint=(groups[1] if len(groups) > 1 else None),
                 ))
     return findings
+
+
+def find_slides(document: Document, keywords: tuple[str, ...],
+                limit: int = 4) -> tuple[tuple[int, ...], str]:
+    """Pages whose heading matches any keyword, with their text.
+
+    Targeting slides rather than whole sections matters for
+    summarisation. A section runs to twenty pages of which two are
+    relevant, and a model handed all twenty summarises the section
+    instead of answering the question — which is why asking "what
+    problem does this solve" against the whole executive summary
+    returned a description of the company.
+    """
+    pages: list[int] = []
+    for page in document.pages:
+        heading = page.heading
+        if not heading or page.is_sparse:
+            continue
+        normalised = _normalise(heading)
+        if any(word in normalised for word in keywords):
+            pages.append(page.number)
+        if len(pages) >= limit:
+            break
+
+    text = "\n".join(document.page(n).text for n in pages).strip()
+    return tuple(pages), text
