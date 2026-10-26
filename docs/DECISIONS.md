@@ -436,3 +436,52 @@ strip the selling out of it.
 records the version and model that produced it. A summary that looks
 wrong in three months can be traced to the exact instructions that
 produced it.
+
+---
+
+## 2026-10-26 — 017: Summaries are cached on what produced them
+
+**Decision.** A briefing is generated once and stored. The cache key is
+the document's content hash, the prompt version and the model name — not
+the deal.
+
+**Why those three.** They are what the answer depends on. Change the
+CIM, revise the prompt, or move to a different model, and the stored
+answer no longer describes what it claims to. The cache then reports
+*what* changed rather than merely that it is stale, because "this
+briefing was written by a different model" and "the document has changed
+underneath it" call for different responses.
+
+Same principle as the reconciliation fingerprint in decision 011: a
+stored conclusion must not outlive the thing it was concluded from.
+
+**Fixture briefings are committed.** Every company is invented, so there
+is nothing to protect, and it means the app runs for anyone who clones
+the repository without an API key of their own.
+
+---
+
+## 2026-10-26 — 018: A wrapped bullet is rejoined; a chained one is not
+
+**Decision.** `ingestion/pdf.py` rejoins a line to the previous line in
+the *same column*, once, when the previous does not end in sentence
+punctuation.
+
+**Why each of those three conditions.** Without the column test, lines
+arrive interleaved across a two-column slide — left, right, left — and
+joining consecutive entries chains unrelated bullets, so a figure from
+one statement attaches to the label of another. Without the "once"
+limit, a line keeps absorbing whatever follows it and swallows the next
+bullet. Without the punctuation test, finished sentences get joined to
+the next.
+
+All three were found by watching the output change: the first version
+lost "The top ten customers represent" from "31% of ARR" entirely, the
+second attributed the gross retention figure to customer concentration,
+and the third merged four bullets into one.
+
+**Related: deduplication is per page.** A deck states a figure in more
+than one place, and `best_kpis` prefers the candidate with the most
+words around it — "Net revenue retention of 118% in FY24" over "118%
+NRR". Deduplicating per document discarded the better evidence before
+anything could compare them.

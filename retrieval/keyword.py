@@ -174,9 +174,9 @@ def find_sections(document: Document) -> list[Section]:
 def _sentences(page: Page) -> list[str]:
     """Split a slide into statements.
 
-    Slides are bullets rather than prose, so a line is usually already a
-    statement. Lines are split further on full stops so that one bullet
-    carrying two figures yields two candidates.
+    Wrapped lines are rejoined upstream, in ingestion.pdf, which is the
+    only place that knows which column a line belongs to. Joining them
+    here chained unrelated bullets from opposite columns together.
     """
     out: list[str] = []
     for line in page.lines:
@@ -210,7 +210,11 @@ def find_kpis(document: Document,
                 if not match:
                     continue
                 groups = match.groups()
-                signature = (key, match.group(0))
+                # Deduplicated per page, not per document: the same
+                # figure stated on two pages is two pieces of evidence,
+                # and keeping only the first discards the better one
+                # before anything can compare them.
+                signature = (key, page.number, match.group(0))
                 if signature in seen:
                     continue
                 seen.add(signature)
@@ -246,3 +250,29 @@ def find_slides(document: Document, keywords: tuple[str, ...],
 
     text = "\n".join(document.page(n).text for n in pages).strip()
     return tuple(pages), text
+
+
+def best_kpis(document: Document,
+              patterns: dict | None = None) -> dict[str, Finding]:
+    """The best-evidenced statement of each metric.
+
+    A deck states a figure in more than one place — a statement on the
+    highlights slide, and the same number in a strip of statistics along
+    the foot of every page. Both are correct and one is far better
+    evidence: "Net revenue retention of 118% in FY24" can be checked by
+    a reader, "118% NRR" cannot.
+
+    So where a metric is found several times, the candidate with the
+    most words around it wins. That is a proxy for context rather than a
+    measure of it, but it reliably prefers a sentence to a label.
+
+    `find_kpis` still returns everything. The alternatives are evidence
+    too, and discarding them in the only function that looks would mean
+    nobody could see the figure was stated twice.
+    """
+    best: dict[str, Finding] = {}
+    for finding in find_kpis(document, patterns):
+        current = best.get(finding.key)
+        if current is None or len(finding.sentence) > len(current.sentence):
+            best[finding.key] = finding
+    return best

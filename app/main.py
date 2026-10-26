@@ -85,14 +85,112 @@ head[1].metric("Documents", len(report.documents))
 head[2].metric("Errors", len(errors))
 head[3].metric("Disagreements", len(disagreements))
 
-tabs = st.tabs(["Scorecard", f"Findings ({len(report.issues)})",
+tabs = st.tabs(["Snapshot", "Scorecard", f"Findings ({len(report.issues)})",
                 "Evidence", "Comparison"])
+
+# ---------------------------------------------------------------------
+# Snapshot — the screening view
+# ---------------------------------------------------------------------
+
+with tabs[0]:
+    briefing, staleness = data.load_briefing(slug)
+    kpis = data.load_kpis(slug)
+
+    left, right = st.columns([3, 2])
+
+    with left:
+        st.markdown("#### What this company is")
+        if briefing is None:
+            st.info("No briefing has been generated for this deal yet. "
+                    "Run `python -m tools.summarise_deal` to write one.")
+        else:
+            if staleness:
+                st.warning("This briefing may be out of date: "
+                           + "; ".join(staleness) + ".")
+            for summary in briefing.summaries:
+                if summary.text == "NOT STATED":
+                    continue
+                st.markdown(f"**{summary.question}**")
+                st.write(summary.text)
+                st.caption(f"From {summary.citation} of the CIM.")
+            for key, why in briefing.failures:
+                st.caption(f"*{key}: not shown — {why}*")
+
+            st.caption(
+                f"Written by {briefing.key.model_name} using prompt "
+                f"v{briefing.key.prompt_version} on "
+                f"{briefing.generated_at[:10]}.")
+
+    with right:
+        st.markdown("#### Identification")
+        st.dataframe(pd.DataFrame([
+            {"": "Sector", " ": truth.sector},
+            {"": "Subsector", " ": truth.subsector},
+            {"": "Country", " ": truth.country},
+            {"": "Currency", " ": truth.currency},
+            {"": "Year end", " ": [
+                "", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November",
+                "December"][truth.fiscal_year_end_month]},
+            {"": "Documents", " ": str(len(report.documents))},
+        ]), use_container_width=True, hide_index=True)
+
+        st.markdown("#### Stated in the CIM")
+        st.caption("Found by searching the document's own prose. These are "
+                   "claims the company makes, not figures we have checked.")
+
+        labels = {
+            "market_size": "Market size",
+            "customer_count": "Customers",
+            "average_contract_value": "Average contract value",
+            "top_10_concentration": "Top 10 concentration",
+            "gross_retention": "Gross retention",
+            "net_retention": "Net retention",
+            "employees": "Employees",
+        }
+        rows = []
+        for key, label in labels.items():
+            finding = kpis.get(key)
+            if finding is None:
+                rows.append({"Metric": label, "Stated": "—", "Source": ""})
+                continue
+            value = finding.value
+            if key in ("market_size", "average_contract_value"):
+                shown = (f"{truth.currency} {value/1e9:,.1f}bn"
+                         if value and value >= 1e9 else
+                         f"{truth.currency} {value/1e6:,.1f}m"
+                         if value and value >= 1e6 else
+                         f"{truth.currency} {value:,.0f}")
+            elif key in ("customer_count", "employees"):
+                shown = f"{value:,.0f}"
+            else:
+                shown = f"{value:,.0f}%"
+            rows.append({"Metric": label, "Stated": shown,
+                         "Source": f"p.{finding.page}"})
+        st.dataframe(pd.DataFrame(rows), use_container_width=True,
+                     hide_index=True)
+
+    st.markdown("---")
+    st.markdown("#### Where this page gets its words and its numbers")
+    st.markdown(
+        "The prose on the left is **written by a model** from the CIM "
+        "pages cited beneath each answer. It is checked before it is "
+        "shown: a summary containing a figure is rejected outright, "
+        "because a plausible invented number is the one failure of an "
+        "LLM summary that a reader cannot catch.\n\n"
+        "Every number on this page is **read from a document** and "
+        "carries the page or cell it came from. The figures on the right "
+        "are what the company *states*; the Scorecard tab holds what the "
+        "accounts *show*, and the Findings tab holds every place the two "
+        "disagree."
+    )
+
 
 # ---------------------------------------------------------------------
 # Scorecard
 # ---------------------------------------------------------------------
 
-with tabs[0]:
+with tabs[1]:
     periods = sorted(report.metrics["revenue"])
     actual = {o.period_label for o in report.observations
               if o.basis.value == "actual"}
@@ -137,7 +235,7 @@ with tabs[0]:
 # Findings
 # ---------------------------------------------------------------------
 
-with tabs[1]:
+with tabs[2]:
     if not report.issues:
         st.success("No findings.")
     for issue in report.issues:
@@ -176,7 +274,7 @@ with tabs[1]:
 # Evidence
 # ---------------------------------------------------------------------
 
-with tabs[2]:
+with tabs[3]:
     st.caption(
         "Every figure as it was printed, with the cell it came from. "
         "Nothing here is corrected: a mis-keyed value is transcribed "
@@ -220,7 +318,7 @@ with tabs[2]:
 # Comparison
 # ---------------------------------------------------------------------
 
-with tabs[3]:
+with tabs[4]:
     st.caption(
         "Actuals only, latest reported period per company. Currencies are "
         "shown and never converted. There is deliberately no overall "

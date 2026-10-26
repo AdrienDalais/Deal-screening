@@ -1,0 +1,116 @@
+{
+  "key": {
+    "document_sha256": "e91b6c86640fd76744c9db1ad6659d1d2e619a326114cc00e148e26102130fd4",
+    "prompt_version": 2,
+    "model_name": "ministral-8b-latest"
+  },
+  "generated_at": "2026-10-26T15:33:33+00:00",
+  "summaries": [
+    {
+      "key": "what_it_does",
+      "question": "What does this company do?",
+      "text": "Thornbury Analytics develops software that automates pricing and risk assessment for mid-sized insurance brokers, using data and internal models to generate recommendations for their clients. It also provides tools to track exposure across their insurance portfolios.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1357,
+      "output_tokens": 47
+    },
+    {
+      "key": "problem",
+      "question": "What problem does it solve for its customers?",
+      "text": "It helps insurance brokers\u2014firms that arrange insurance for businesses\u2014reduce errors and risks in pricing by replacing guesswork with data-driven recommendations. It also gives them clearer visibility of potential losses across their entire insurance portfolio.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1395,
+      "output_tokens": 45
+    },
+    {
+      "key": "how_it_works",
+      "question": "How does the product actually work?",
+      "text": "The software runs pricing and risk checks in real time, using customer data and internal models to suggest adjustments to insurance policies. It also tracks potential losses across all policies managed by the broker, updating results frequently to reflect changes.",
+      "source_pages": [
+        19,
+        20,
+        21,
+        22
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1444,
+      "output_tokens": 45
+    },
+    {
+      "key": "who_buys",
+      "question": "Who buys it, and why do they keep paying?",
+      "text": "Insurance brokers pay because the software reduces costly mistakes in pricing and helps them avoid unexpected losses. They continue using it to meet stricter rules on pricing transparency and to save time on manual checks.",
+      "source_pages": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1374,
+      "output_tokens": 41
+    },
+    {
+      "key": "how_it_earns",
+      "question": "How does the company make its money?",
+      "text": "The company earns money through annual subscription fees paid by insurance brokers for its software. It also charges extra for contract renewals tied to inflation adjustments.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1524,
+      "output_tokens": 32
+    },
+    {
+      "key": "market",
+      "question": "What market does it sell into, and who else is in it?",
+      "text": "The company competes in the market for software that helps insurance brokers manage pricing and risk analysis, alongside larger established vendors and smaller niche providers. Direct competitors include firms specialising in analytics for brokers, while many brokers still rely on manual spreadsheets.",
+      "source_pages": [
+        34,
+        35,
+        36,
+        37
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1417,
+      "output_tokens": 53
+    },
+    {
+      "key": "growth",
+      "question": "How does the company plan to grow?",
+      "text": "The company aims to grow by selling its software to larger insurance broker groups formed through industry mergers, which need more advanced tools to manage their expanded portfolios. It also plans to expand into new markets, including Ireland and the Benelux region, and introduce additional features like claims analytics.",
+      "source_pages": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1614,
+      "output_tokens": 60
+    }
+  ],
+  "failures": []
+}

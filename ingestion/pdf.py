@@ -20,6 +20,7 @@ justify its cost.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -35,6 +36,10 @@ LINE_TOLERANCE = 4.0
 # followed by "top 10 customer concentration", and attributes the figure
 # to the wrong metric.
 COLUMN_GAP_RATIO = 0.08
+
+# Two lines starting within this many points of each other are in the
+# same column, so one may be a continuation of the other.
+SAME_COLUMN_TOLERANCE = 6.0
 
 # A page holding less text than this is a divider or a graphic-led
 # slide. Reported rather than skipped: a page the system could not read
@@ -151,7 +156,8 @@ class Document:
         return self.pages[number - 1]
 
 
-def _emit(group: list[Fragment], page_width: float, out: list[str]) -> None:
+def _emit(group: list[Fragment], page_width: float,
+          out: list[tuple[float, str]]) -> None:
     """Turn one horizontal band of fragments into one or more lines.
 
     Split where the horizontal gap is wide enough to be a column
@@ -171,13 +177,13 @@ def _emit(group: list[Fragment], page_width: float, out: list[str]) -> None:
             if fragment.x - edge > gap_limit:
                 text = " ".join(f.text.strip() for f in run if f.text.strip())
                 if text:
-                    out.append(text)
+                    out.append((run[0].x, text))
                 run = []
         run.append(fragment)
 
     text = " ".join(f.text.strip() for f in run if f.text.strip())
     if text:
-        out.append(text)
+        out.append((run[0].x, text))
 
 
 def _bands(fragments: list[Fragment]) -> list[list[Fragment]]:
@@ -197,17 +203,56 @@ def _bands(fragments: list[Fragment]) -> list[list[Fragment]]:
 def _order(fragments: list[Fragment], page_width: float
            ) -> tuple[list[str], list[str]]:
     """Return (lines, rows): split at columns, and not split."""
-    lines: list[str] = []
+    placed: list[tuple[float, str]] = []
     rows: list[str] = []
     for band in _bands(fragments):
-        _emit(list(band), page_width, lines)
+        _emit(list(band), page_width, placed)
         band.sort(key=lambda f: f.x)
         row = " ".join(f.text.strip() for f in band if f.text.strip())
         if row:
             rows.append(row)
-    return lines, rows
+    return _rejoin_wrapped(placed), rows
 
 
+def _rejoin_wrapped(placed: list[tuple[float, str]]) -> list[str]:
+    """Rejoin a bullet that wrapped onto a second line.
+
+    A bullet running past the column width is two lines on the page and
+    one statement in meaning. Separated, a label loses its figure — "The
+    top ten customers represent" on one line, "31% of ARR" on the next —
+    and the metric is never found.
+
+    Columns are tracked separately, because lines arrive interleaved:
+    reading top to bottom across a two-column slide gives left, right,
+    left, right, so a bullet's continuation is two entries later rather
+    than the next one. Joining to the previous *entry* chains unrelated
+    bullets from opposite sides of the slide together; joining to the
+    previous entry *in the same column* is what was meant.
+    """
+    lines: list[str] = []
+    last_in_column: dict[int, int] = {}
+    absorbed: set[int] = set()
+
+    for x, text in placed:
+        column = round(x / SAME_COLUMN_TOLERANCE)
+        index = last_in_column.get(column)
+        wraps = (
+            index is not None
+            and index not in absorbed
+            and not re.search(r"[.!?:]$", lines[index])
+        )
+        if wraps:
+            # At most one continuation. A line that keeps absorbing
+            # whatever follows it swallows the next bullet too, and then
+            # a figure from one statement attaches to the label of
+            # another — which is worse than the truncation it fixes.
+            lines[index] = f"{lines[index]} {text}"
+            absorbed.add(index)
+            continue
+        lines.append(text)
+        last_in_column[column] = len(lines) - 1
+
+    return lines
 def read(path: Path | str) -> Document:
     path = Path(path)
     reader = PdfReader(str(path))
@@ -268,3 +313,4 @@ def _mark_content_images(pages: list[Page]) -> None:
     for page in pages:
         page.content_image_count = sum(
             1 for size in page.image_sizes if size not in furniture)
+

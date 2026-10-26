@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ingestion.pdf import read
-from retrieval.keyword import find_kpis, find_sections
+from retrieval.keyword import best_kpis, find_kpis, find_sections
 from tests.fixtures.build_all import COMPANIES, FIXTURE_ROOT
 
 
@@ -110,8 +110,13 @@ def test_the_highlights_slide_is_inside_the_summary_section(document):
 
 
 def test_stated_kpis_are_found_with_their_source_page(document):
+    """Against best_kpis rather than find_kpis. A deck states a figure
+    in more than one place — a sentence on the highlights slide and the
+    same number in a strip of statistics along the foot of the page —
+    and which one an arbitrary dict comprehension lands on is not a
+    property worth asserting."""
     doc, truth = document
-    findings = {f.key: f for f in find_kpis(doc)}
+    findings = best_kpis(doc)
     for kpi in truth.kpis:
         if kpi.key not in findings:
             continue
@@ -143,3 +148,25 @@ def test_no_kpi_is_reported_without_the_sentence_it_came_from(document):
     for finding in find_kpis(doc):
         assert finding.sentence.strip()
         assert finding.raw_value in finding.sentence
+
+
+def test_the_best_evidenced_statement_of_a_metric_wins(document):
+    """Both "Net revenue retention of 118% in FY24" and "118% NRR" are
+    correct. Only one can be checked by a reader."""
+    doc, _ = document
+    best = best_kpis(doc)
+    everything = find_kpis(doc)
+
+    for key, chosen in best.items():
+        alternatives = [f for f in everything if f.key == key]
+        assert len(chosen.sentence) >= max(
+            len(f.sentence) for f in alternatives)
+
+
+def test_a_wrapped_bullet_is_rejoined_with_its_figure(document):
+    """"The top ten customers represent" on one line and "31% of ARR" on
+    the next is one statement. Separated, the metric is never found."""
+    doc, _ = document
+    best = best_kpis(doc)
+    assert "top_10_concentration" in best
+    assert "%" in best["top_10_concentration"].sentence

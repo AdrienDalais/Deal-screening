@@ -1,0 +1,116 @@
+{
+  "key": {
+    "document_sha256": "b8c3b4f102a95a0c15056d7f1b5072fb99ab72f3da46bb47232465c135554e4a",
+    "prompt_version": 2,
+    "model_name": "ministral-8b-latest"
+  },
+  "generated_at": "2026-10-26T15:33:47+00:00",
+  "summaries": [
+    {
+      "key": "what_it_does",
+      "question": "What does this company do?",
+      "text": "Larkspur Systems designs software that helps freight forwarders and logistics operators manage quotations, bookings, and settlements for multi-modal shipments. It replaces manual processes like email and spreadsheets to reduce errors and improve visibility of pricing differences. The software is sold on a subscription basis with annual contract renewals.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1344,
+      "output_tokens": 63
+    },
+    {
+      "key": "problem",
+      "question": "What problem does it solve for its customers?",
+      "text": "It helps freight forwarders and logistics operators track and reduce the gaps between quoted and actual shipping costs, ensuring they charge customers fairly and avoid financial losses from unclear pricing. This prevents disputes over fees and improves trust with clients.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1398,
+      "output_tokens": 46
+    },
+    {
+      "key": "how_it_works",
+      "question": "How does the product actually work?",
+      "text": "The software automatically compares quoted shipping prices with final costs, flagging discrepancies in real time. It then reconciles payments between carriers and customers, ensuring invoices match agreed terms.",
+      "source_pages": [
+        19,
+        20,
+        21,
+        22
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1447,
+      "output_tokens": 36
+    },
+    {
+      "key": "who_buys",
+      "question": "Who buys it, and why do they keep paying?",
+      "text": "Freight forwarders and logistics operators pay because the software prevents costly disputes over shipping fees and ensures they charge customers fairly. They renew contracts to avoid manual errors and maintain clear records of pricing agreements.",
+      "source_pages": [
+        28,
+        29,
+        30,
+        31
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1381,
+      "output_tokens": 40
+    },
+    {
+      "key": "how_it_earns",
+      "question": "How does the company make its money?",
+      "text": "The company earns money from annual subscription fees paid by freight forwarders and logistics operators. These fees are tied to multi-year contracts, with automatic renewals unless cancelled. The software\u2019s ability to reduce pricing disputes and improve cost tracking justifies continued payments.",
+      "source_pages": [
+        5,
+        7,
+        8,
+        9
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1518,
+      "output_tokens": 52
+    },
+    {
+      "key": "market",
+      "question": "What market does it sell into, and who else is in it?",
+      "text": "NOT STATED",
+      "source_pages": [
+        34,
+        35,
+        36,
+        37
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1439,
+      "output_tokens": 4
+    },
+    {
+      "key": "growth",
+      "question": "How does the company plan to grow?",
+      "text": "The company aims to grow by expanding into new European markets through direct sales and partnerships, while targeting larger logistics groups formed by industry consolidation. It will also introduce a new feature to handle customs processes, supported by existing referral incentives.",
+      "source_pages": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "prompt_version": 2,
+      "model_name": "ministral-8b-latest",
+      "input_tokens": 1582,
+      "output_tokens": 46
+    }
+  ],
+  "failures": []
+}

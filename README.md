@@ -6,7 +6,7 @@ Turning company documents into a financial scorecard that shows its
 working — built by a growth-equity investor to run a real screening
 workflow, and to be defensible line by line.
 
-![Scorecard](docs/images/scorecard.png)
+![Snapshot](docs/images/snapshot.png)
 
 ---
 
@@ -47,6 +47,21 @@ pick one.
 ---
 
 ## What it does
+
+### It explains the company in plain language, and never invents a number
+
+The briefing on the left is written by a model from the CIM pages cited
+beneath each answer. Every number on the page is read from a document
+and carries its page or cell.
+
+**A summary containing a figure is rejected outright.** That is enforced
+in code, not requested in the prompt — a plausible invented number is
+the one failure of an LLM summary that a reader cannot catch, so it is
+made impossible rather than managed. Checking for digits was not enough:
+"every two weeks" and "three-year contracts" got through, so quantities
+spelled out are rejected too.
+
+![Scorecard](docs/images/scorecard.png)
 
 ### It refuses to show a figure it cannot defend
 
